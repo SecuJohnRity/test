@@ -78,6 +78,7 @@ int local_start()
 {
     // This must be always the first instruction
     enable_dll_verification();
+    sleep(5);
 
     char *cfg = OSSECCONF;
     WSADATA wsaData;

@@ -385,6 +385,7 @@ Public Function KillGUITask()
 End Function
 
 Public Function StartWazuhSvc()
+    WScript.Sleep 5000
 	Set WshShell = CreateObject("WScript.Shell")
     StartSvc = "NET START WazuhSvc"
     WshShell.run StartSvc, 0, True
