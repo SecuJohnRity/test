@@ -2327,3 +2327,123 @@ TEST_F(SyscollectorImpTest, PackagesDuplicated)
         t.join();
     }
 }
+
+TEST_F(SyscollectorImpTest, sanitizeJsonValues)
+{
+    const auto spInfoWrapper{std::make_shared<SysInfoWrapper>()};
+    EXPECT_CALL(*spInfoWrapper, os()).WillRepeatedly(Return(nlohmann::json::parse(
+                                                                R"({"architecture":" x86_64","scan_time":"2020/12/28 21:49:50", "hostname":"UBUNTU ","os_build":" 7601 ","os_major":"  6","os_minor":"1  ","os_name":"Microsoft Windows 7","os_release":"  sp1  ","os_version":"   6.1.7601   "})")));
+
+    CallbackMock wrapper;
+    std::function<void(const std::string&)> callbackData
+    {
+        [&wrapper](const std::string & data)
+        {
+            auto delta = nlohmann::json::parse(data);
+            delta["data"].erase("checksum");
+            delta["data"].erase("id");
+            wrapper.callbackMock(delta.dump());
+        }
+    };
+
+    CallbackMock wrapperDelta;
+    std::function<void(const std::string&)> callbackDataDelta
+    {
+        [&wrapperDelta](const std::string & data)
+        {
+            auto delta = nlohmann::json::parse(data);
+
+            if (delta["type"].get_ref<const std::string&>().compare("dbsync_osinfo") == 0)
+            {
+                delta["data"].erase("checksum");
+            }
+
+            delta["data"].erase("scan_time");
+            wrapperDelta.callbackMock(delta.dump());
+        }
+    };
+
+    const auto expectedResult1
+    {
+        R"({"data":{"architecture":"x86_64","hostname":"UBUNTU","os_build":"7601","os_major":"6","os_minor":"1","os_name":"Microsoft Windows 7","os_release":"sp1","os_version":"6.1.7601"},"operation":"INSERTED","type":"dbsync_osinfo"})"
+    };
+
+    const auto expectedResult2
+    {
+        R"({"component":"syscollector_osinfo","data":{"begin":"Microsoft Windows 7","end":"Microsoft Windows 7"},"type":"integrity_check_global"})"
+    };
+
+    const auto expectedResult3
+    {
+        R"({"component":"syscollector_hwinfo","data":{},"type":"integrity_clear"})"
+    };
+
+    const auto expectedResult4
+    {
+        R"({"component":"syscollector_network_iface","data":{},"type":"integrity_clear"})"
+    };
+
+    const auto expectedResult5
+    {
+        R"({"component":"syscollector_network_protocol","data":{},"type":"integrity_clear"})"
+    };
+
+    const auto expectedResult6
+    {
+        R"({"component":"syscollector_network_address","data":{},"type":"integrity_clear"})"
+    };
+
+    const auto expectedResult7
+    {
+        R"({"component":"syscollector_packages","data":{},"type":"integrity_clear"})"
+    };
+
+    const auto expectedResult8
+    {
+        R"({"component":"syscollector_hotfixes","data":{},"type":"integrity_clear"})"
+    };
+
+    const auto expectedResult9
+    {
+        R"({"component":"syscollector_ports","data":{},"type":"integrity_clear"})"
+    };
+
+    const auto expectedResult10
+    {
+        R"({"component":"syscollector_processes","data":{},"type":"integrity_clear"})"
+    };
+
+    EXPECT_CALL(wrapperDelta, callbackMock(expectedResult1)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult2)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult3)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult4)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult5)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult6)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult7)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult8)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult9)).Times(1);
+    EXPECT_CALL(wrapper, callbackMock(expectedResult10)).Times(1);
+
+    std::thread t
+    {
+        [&spInfoWrapper, &callbackData, &callbackDataDelta]()
+        {
+            Syscollector::instance().init(spInfoWrapper,
+                                          callbackDataDelta,
+                                          callbackData,
+                                          logFunction,
+                                          SYSCOLLECTOR_DB_PATH,
+                                          "",
+                                          "",
+                                          3600, true, false, true, false, false, false, false, false, false, true);
+        }
+    };
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    Syscollector::instance().destroy();
+
+    if (t.joinable())
+    {
+        t.join();
+    }
+}

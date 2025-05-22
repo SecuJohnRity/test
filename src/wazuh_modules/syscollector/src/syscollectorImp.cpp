@@ -935,6 +935,35 @@ static void removeKeysWithEmptyValue(nlohmann::json& input)
     }
 }
 
+static void sanitizeJsonValue(nlohmann::json& input)
+{
+    if (input.is_object())
+    {
+        for (auto it = input.begin(); it != input.end(); ++it)
+        {
+            auto& value = it.value();
+
+            sanitizeJsonValue(value);
+        }
+    }
+    else if (input.is_array())
+    {
+        for (auto& item : input)
+        {
+            sanitizeJsonValue(item);
+        }
+    }
+    else if (input.is_string())
+    {
+        const std::string& stringValue = input.get_ref<const std::string&>();
+
+        if (stringValue != " ")
+        {
+            input = Utils::trim(stringValue);
+        }
+    }
+}
+
 static bool isElementDuplicated(const nlohmann::json& input, const std::pair<std::string, std::string>& keyValue)
 {
     const auto it
@@ -965,6 +994,7 @@ void Syscollector::notifyChange(ReturnTypeCallback result, const nlohmann::json&
                 msg["data"] = item;
                 msg["data"]["scan_time"] = m_scanTime;
                 removeKeysWithEmptyValue(msg["data"]);
+                sanitizeJsonValue(msg["data"]);
                 const auto msgToSend{msg.dump()};
                 m_reportDiffFunction(msgToSend);
                 m_logFunction(LOG_DEBUG_VERBOSE, "Delta sent: " + msgToSend);
@@ -979,6 +1009,7 @@ void Syscollector::notifyChange(ReturnTypeCallback result, const nlohmann::json&
             msg["data"] = data;
             msg["data"]["scan_time"] = m_scanTime;
             removeKeysWithEmptyValue(msg["data"]);
+            sanitizeJsonValue(msg["data"]);
             const auto msgToSend{msg.dump()};
             m_reportDiffFunction(msgToSend);
             m_logFunction(LOG_DEBUG_VERBOSE, "Delta sent: " + msgToSend);
@@ -1064,6 +1095,7 @@ void Syscollector::registerWithRsync()
                     {
                         auto& fieldData { *it };
                         removeKeysWithEmptyValue(fieldData);
+                        sanitizeJsonValue(fieldData);
                         fieldData["scan_time"] = Utils::getCurrentTimestamp();
                         const auto msgToSend{jsonData.dump()};
                         m_reportSyncFunction(msgToSend);
