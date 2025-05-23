@@ -20,12 +20,157 @@
 #include "utils/flatbuffers/include/syscheck_deltas_schema.h"
 #include "agent_messages_adapter.h"
 
+#ifdef ENGINE_FORWARDING_POC
+#include <curl/curl.h>
+#include <string.h> // For strcmp, strlen, etc.
+#endif
+
 enum msg_type {
     MT_INVALID,
     MT_SYS_DELTAS,
     MT_SYNC,
     MT_SYSCHECK_DELTAS,
 } msg_type_t;
+
+#ifdef ENGINE_FORWARDING_POC
+static int w_curl_initialized = 0; // Static flag for curl_global_init
+
+// Basic JSON string escaper for PoC.
+// Handles essential characters: ", \, \n, \r, \t.
+// Caller must free the returned string.
+STATIC char* w_escape_json_string_poc(const char* input) {
+    if (!input) {
+        // Return an empty string "" for null inputs to avoid issues with snprintf %s.
+        char *empty_val = (char*)os_malloc(1); 
+        if(empty_val) *empty_val = '\0'; // Create an empty string
+        return empty_val;
+    }
+
+    size_t len = strlen(input);
+    size_t new_len = len; 
+
+    // First pass: count characters that need escaping to determine new length
+    for (size_t i = 0; i < len; ++i) {
+        char c = input[i];
+        if (c == '\"' || c == '\\' || c == '\n' || c == '\r' || c == '\t') {
+            new_len++; 
+        }
+    }
+
+    char* escaped_str = (char*)os_malloc(new_len + 1); 
+    if (!escaped_str) {
+        merror("w_escape_json_string_poc: os_malloc failed");
+        // In case of malloc failure, return an empty string to prevent caller from crashing
+        // This helps prevent snprintf from receiving a NULL for %s.
+        char *empty_val_on_fail = (char*)os_malloc(1); 
+        if(empty_val_on_fail) *empty_val_on_fail = '\0';
+        return empty_val_on_fail;
+    }
+
+    char* out_ptr = escaped_str;
+    for (size_t i = 0; i < len; ++i) {
+        char c = input[i];
+        switch (c) {
+            case '\"': *out_ptr++ = '\\'; *out_ptr++ = '\"'; break;
+            case '\\': *out_ptr++ = '\\'; *out_ptr++ = '\\'; break;
+            case '\n': *out_ptr++ = '\\'; *out_ptr++ = 'n'; break;
+            case '\r': *out_ptr++ = '\\'; *out_ptr++ = 'r'; break;
+            case '\t': *out_ptr++ = '\\'; *out_ptr++ = 't'; break;
+            default:   *out_ptr++ = c; break;
+        }
+    }
+    *out_ptr = '\0';
+    return escaped_str;
+}
+
+STATIC char* format_to_ndjson(const char* agent_id, const char* original_log, const char* agent_name, const char* agent_ip) {
+    char* esc_agent_id = w_escape_json_string_poc(agent_id);
+    char* esc_original_log = w_escape_json_string_poc(original_log);
+    char* esc_agent_name = w_escape_json_string_poc(agent_name);
+    char* esc_agent_ip = w_escape_json_string_poc(agent_ip);
+
+    if (!esc_agent_id || !esc_original_log || !esc_agent_name || !esc_agent_ip) {
+        merror("NDJSON: Failed to escape one or more strings for agent ID '%s'. Some parts might be NULL if malloc failed in escaper.", agent_id ? agent_id : "unknown");
+        os_free(esc_agent_id); 
+        os_free(esc_original_log);
+        os_free(esc_agent_name);
+        os_free(esc_agent_ip);
+        return NULL;
+    }
+
+    size_t buffer_size = strlen(esc_agent_id) + strlen(esc_original_log) +
+                         strlen(esc_agent_name) + strlen(esc_agent_ip) + 128; // JSON overhead and newline
+
+    char* ndjson_payload = (char*)os_malloc(buffer_size);
+    if (!ndjson_payload) {
+        merror("NDJSON: Failed to allocate memory for payload for agent ID '%s'.", agent_id ? agent_id : "unknown");
+        os_free(esc_agent_id);
+        os_free(esc_original_log);
+        os_free(esc_agent_name);
+        os_free(esc_agent_ip);
+        return NULL;
+    }
+
+    snprintf(ndjson_payload, buffer_size,
+             "{\"agent_id\":\"%s\",\"agent_name\":\"%s\",\"agent_ip\":\"%s\",\"original_log\":\"%s\"}\n",
+             esc_agent_id,
+             esc_agent_name,
+             esc_agent_ip,
+             esc_original_log);
+
+    os_free(esc_agent_id);
+    os_free(esc_original_log);
+    os_free(esc_agent_name);
+    os_free(esc_agent_ip);
+    return ndjson_payload;
+}
+
+STATIC void forward_to_engine(const char* ndjson_payload) {
+    CURL *curl_handle;
+    CURLcode res;
+
+    if (!w_curl_initialized) {
+        if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
+            merror("EngineForward: Failed to initialize libcurl globally.");
+            return;
+        }
+        w_curl_initialized = 1;
+    }
+
+    curl_handle = curl_easy_init();
+    if(curl_handle) {
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/x-ndjson");
+
+        curl_easy_setopt(curl_handle, CURLOPT_URL, "http://127.0.0.1:5050/events/stateless");
+        curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, ndjson_payload);
+        curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT_MS, 2000L); 
+        curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L); 
+
+        mdebug1("EngineForward: Attempting to send payload snippet: %.100s", ndjson_payload);
+        res = curl_easy_perform(curl_handle);
+
+        if(res != CURLE_OK) {
+            merror("EngineForward: curl_easy_perform() failed: %s. Payload snippet: %.100s", curl_easy_strerror(res), ndjson_payload);
+        } else {
+            long response_code;
+            curl_easy_getinfo(curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
+            if (response_code >= 300) {
+                 merror("EngineForward: Server responded with HTTP %ld. Payload snippet: %.100s", response_code, ndjson_payload);
+            } else {
+                 mdebug1("EngineForward: Successfully forwarded message, HTTP status: %ld.", response_code);
+            }
+        }
+
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl_handle);
+    } else {
+        merror("EngineForward: curl_easy_init() failed.");
+    }
+}
+#endif
+
 #ifdef WAZUH_UNIT_TESTING
 // Remove static qualifier when unit testing
 #define STATIC
@@ -878,6 +1023,22 @@ STATIC void HandleSecureMessage(const message_t *message, w_linked_queue_t * con
 
     // Forwarding events to subscribers
     router_message_forward(tmp_msg, agentid_str, agent_ip, agent_name);
+
+#ifdef ENGINE_FORWARDING_POC
+    // POC: Forward message to new engine if agent_id is "001"
+    // This block is inserted before freeing agentid_str, agent_ip, agent_name
+    if (agentid_str && strcmp(agentid_str, "001") == 0) {
+        if (tmp_msg) { // tmp_msg holds the decrypted log
+            // agent_name and agent_ip are available here before being freed by the original code below.
+            mdebug1("Agent '001': Preparing to forward message to new engine: %s", tmp_msg);
+            char* ndjson_payload = format_to_ndjson(agentid_str, tmp_msg, agent_name, agent_ip);
+            if (ndjson_payload) {
+                forward_to_engine(ndjson_payload);
+                os_free(ndjson_payload);
+            }
+        }
+    }
+#endif
 
     os_free(agentid_str);
     os_free(agent_ip);

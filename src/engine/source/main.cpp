@@ -39,6 +39,10 @@
 #include <store/store.hpp>
 #include <vdscanner/scanOrchestrator.hpp>
 
+#ifdef ENGINE_FORWARDING_POC
+#include <actions/ar_action.hpp> // For PoC Active Response
+#endif
+
 #include "base/utils/getExceptionStack.hpp"
 #include "stackExecutor.hpp"
 
@@ -629,10 +633,102 @@ int main(int argc, char* argv[])
         // Server
         {
             g_engineServer = std::make_shared<httpsrv::Server>("EVENT_SRV");
+
+#ifdef ENGINE_FORWARDING_POC
+            auto pocNdjsonPushEventHandler = 
+                [&orchestrator, &archiver, lambdaName = logging::getLambdaName(__FUNCTION__, "pocNdjsonPushEventHandler")]
+                (const auto& req, auto& res) {
+                LOG_TRACE_L(lambdaName.c_str(), fmt::format("PoC Handler: Received request body: {}", req.body));
+
+                if (req.body.empty()) {
+                    LOG_WARN_L(lambdaName.c_str(), "PoC Handler: Received empty request body.");
+                    res.status = httplib::StatusCode::BadRequest_400;
+                    res.set_content("{\"error\": \"Empty request body\", \"code\": 400}", "application/json");
+                    return;
+                }
+                
+                // Assuming each line in NDJSON is a separate event, but PoC sends one JSON object per request.
+                // If multiple JSON objects could arrive in one body, req.body would need splitting by '\n'.
+                // For this PoC, treat the entire body as a single JSON object.
+                base::Event event;
+                try {
+                    event = std::make_shared<json::Json>(req.body.c_str());
+                } catch (const std::exception& e) {
+                    LOG_ERROR_L(lambdaName.c_str(), "PoC Handler: Failed to parse JSON: {}. Body: {}", e.what(), req.body);
+                    res.status = httplib::StatusCode::BadRequest_400;
+                    res.set_content(fmt::format("{{\"error\": \"Malformed JSON: {}\", \"code\": 400}}", e.what()), "application/json");
+                    return;
+                }
+
+                if (event->isNull()) { 
+                     LOG_ERROR_L(lambdaName.c_str(), "PoC Handler: Parsed JSON is null. Body: {}", req.body);
+                     res.status = httplib::StatusCode::BadRequest_400;
+                     res.set_content("{\"error\": \"Malformed JSON resulted in null object\", \"code\": 400}", "application/json");
+                     return;
+                }
+
+                // Validate required fields for the PoC
+                if (!event->exists("/original_log") || !event->isString("/original_log")) {
+                    LOG_ERROR_L(lambdaName.c_str(), "PoC Handler: NDJSON missing 'original_log' string field: {}", req.body);
+                    res.status = httplib::StatusCode::BadRequest_400;
+                    res.set_content("{\"error\": \"NDJSON missing original_log string field\", \"code\": 400}", "application/json");
+                    return;
+                }
+                if (!event->exists("/agent_id") || !event->isString("/agent_id")) {
+                    LOG_WARN_L(lambdaName.c_str(), "PoC Handler: NDJSON missing 'agent_id' string field in body: {}", req.body);
+                    // Proceeding without agent_id for PoC, but real scenario might require it
+                }
+
+                // Archive the raw received body
+                if (archiver) { 
+                    archiver->archive(std::string(req.body)); 
+                }
+
+                // POC Rule Check and Alerting
+                std::string original_log_str = event->getString("/original_log").value_or("");
+                if (original_log_str.find("POC_REMOTED_MATCH_THIS") != std::string::npos) {
+                    LOG_INFO_L(lambdaName.c_str(), "PoC Rule: Match found for 'POC_REMOTED_MATCH_THIS'");
+                    json::Json alert_output = json::Json::object(); // Create an object: {}
+                    alert_output.setInt(100001, "/poc_alert/rule_id");
+                    alert_output.setString("PoC Rule: Matched 'POC_REMOTED_MATCH_THIS' in original_log", "/poc_alert/description");
+                    alert_output.setString(event->getString("/agent_id").value_or("UNKNOWN"), "/poc_alert/agent_id");
+                    
+                    // Include the original event that triggered the alert
+                    // Ensure event is treated as const or copied if modified by set
+                    // Since base::Event is std::shared_ptr<json::Json>, *event gives the json::Json object
+                    alert_output.set("/poc_alert/original_event_data", *event);
+
+                    std::string alert_string = alert_output.str(); // Serialize to string (compact)
+                                                                    // Use prettyStr() for formatted output if preferred for debugging
+                    
+                    if (archiver) {
+                        archiver->archive(std::move(alert_string)); // Pass by rvalue reference
+                        LOG_INFO_L(lambdaName.c_str(), "PoC Alert: Alert for rule 100001 sent to archiver.");
+                    }
+
+                    // Trigger PoC Active Response
+                    LOG_INFO_L(lambdaName.c_str(), "PoC Rule: Attempting to trigger AR action for rule 100001.");
+                    if (wazuh::engine::actions::handle_trigger_active_response_action("poc-engine-ar", event, EXECQUEUE)) {
+                         LOG_INFO_L(lambdaName.c_str(), "PoC AR: Message successfully sent to execd queue for command 'poc-engine-ar'.");
+                    } else {
+                         LOG_ERROR_L(lambdaName.c_str(), "PoC AR: Failed to send message to execd queue for command 'poc-engine-ar'.");
+                    }
+                }
+                
+                LOG_DEBUG_L(lambdaName.c_str(), "PoC Handler: Posting event to orchestrator: {}", event->str());
+                orchestrator->postEvent(std::move(event)); // std::move is fine for std::shared_ptr
+                
+                res.status = httplib::StatusCode::OK_200;
+                res.set_content("{\"message\": \"Event received by PoC handler\"}", "application/json");
+            };
+            LOG_INFO("Using PoC NDJSON handler for /events/stateless");
+            g_engineServer->addRoute(httpsrv::Method::POST, "/events/stateless", pocNdjsonPushEventHandler);
+#else
             g_engineServer->addRoute(
                 httpsrv::Method::POST,
                 "/events/stateless",
                 api::event::handlers::pushEvent(orchestrator, api::event::protocol::getNDJsonParser(), archiver));
+#endif
         }
     }
     catch (const std::exception& e)

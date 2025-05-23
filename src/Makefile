@@ -433,6 +433,11 @@ ifeq (${COVERITY}, YES)
 	DEFINES+=-D__coverity__
 endif
 
+# Add ENGINE_FORWARDING_POC define for relevant targets (server, local, hybrid)
+ifeq ($(filter server local hybrid,$(TARGET)),$(TARGET))
+DEFINES+=-DENGINE_FORWARDING_POC
+endif
+
 OSSEC_CFLAGS+=${DEFINES}
 OSSEC_CFLAGS+=-pipe -Wall -Wextra -std=gnu99
 OSSEC_CFLAGS+=-I./ -I./headers/ -I${EXTERNAL_OPENSSL}include -I$(EXTERNAL_JSON) -I${EXTERNAL_LIBYAML}include -I${EXTERNAL_CURL}include -I${EXTERNAL_MSGPACK}include -I${EXTERNAL_BZIP2} -I${SHARED_MODULES}common -I${DBSYNC}include -I${RSYNC}include -I${SYSCOLLECTOR}include  -I${SYSINFO}include  -I${EXTERNAL_LIBPCRE2}include -I${EXTERNAL_RPM}/builddir/output/include -I${SYSCHECK}include -I${ROUTER}include -I${CONTENT_MANAGER}include -I${VULNERABILITY_SCANNER}include -I${INVENTORY_HARVESTER}include -I./shared_modules/
@@ -2112,8 +2117,14 @@ remoted_o := $(remoted_c:.c=.o)
 remoted/%.o: remoted/%.c
 	${OSSEC_CC} ${OSSEC_CFLAGS}  -DPORTABLE_UNALIGNED_ACCESS=0 -I./remoted -DARGV0=\"wazuh-remoted\" -c $^ -o $@
 
+# Link wazuh-remoted with libcurl if ENGINE_FORWARDING_POC is defined (for server, local, hybrid)
+ifeq ($(filter server local hybrid,$(TARGET)),$(TARGET))
+wazuh-remoted: ${remoted_o} $(LIBCURL_LIB)
+	${OSSEC_CCBIN} ${OSSEC_LDFLAGS} ${WAZUH_LDFLAGS} $^ ${OSSEC_LIBS} ${WAZUH_LIBS} $(LIBCURL_LIB) -o $@
+else
 wazuh-remoted: ${remoted_o}
 	${OSSEC_CCBIN} ${OSSEC_LDFLAGS} ${WAZUH_LDFLAGS} $^ ${OSSEC_LIBS} ${WAZUH_LIBS} -o $@
+endif
 
 #### wazuh-agentd ####
 
