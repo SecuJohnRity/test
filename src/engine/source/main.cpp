@@ -46,6 +46,13 @@
 #include "base/utils/getExceptionStack.hpp"
 #include "stackExecutor.hpp"
 
+#ifdef ENGINE_ADAPT_TO_WAZUH_QUEUES
+#include <input_adapters/wazuh_queue_reader.hpp> // For WazuhDefaultQueueReader
+#include <base/json.hpp> // For json::Json, which is base::Event's underlying type
+// Note: base/event.hpp or base/baseTypes.hpp might be included transitively,
+// but explicitly including base/json.hpp is good for clarity if directly manipulating json::Json.
+#endif
+
 namespace
 {
 struct QueueTraits : public moodycamel::ConcurrentQueueDefaultTraits
@@ -56,6 +63,29 @@ struct QueueTraits : public moodycamel::ConcurrentQueueDefaultTraits
 } // namespace
 
 std::shared_ptr<httpsrv::Server> g_engineServer {};
+
+#ifdef ENGINE_ADAPT_TO_WAZUH_QUEUES
+std::shared_ptr<wazuh::engine::input_adapters::WazuhDefaultQueueReader> g_wazuh_queue_reader;
+
+namespace { // Anonymous namespace for helpers local to this file
+    std::string messageSourceTypeToString(wazuh::engine::input_adapters::MessageSourceType type) {
+        using namespace wazuh::engine::input_adapters;
+        switch (type) {
+            case MessageSourceType::LOCALFILE_MQ_EVENT: return "LOCALFILE_MQ";
+            case MessageSourceType::AGENT_EVENT: return "AGENT_EVENT";
+            case MessageSourceType::SYSLOG_EVENT: return "SYSLOG_EVENT";
+            // Add cases for other MessageSourceType enum values as they are defined
+            // For example:
+            // case MessageSourceType::JSON_EVENT: return "JSON_EVENT";
+            // case MessageSourceType::AGENT_LEGACY_EVENT: return "AGENT_LEGACY_EVENT";
+            // case MessageSourceType::AGENT_JSON_EVENT: return "AGENT_JSON_EVENT";
+            // case MessageSourceType::AUTH_EVENT: return "AUTH_EVENT";
+            case MessageSourceType::UNKNOWN:
+            default: return "UNKNOWN";
+        }
+    }
+} // anonymous namespace
+#endif
 
 void sigintHandler(const int signum)
 {
@@ -410,6 +440,81 @@ int main(int argc, char* argv[])
             exitHandler.add([orchestrator]() { orchestrator->stop(); });
             LOG_INFO("Router initialized.");
         }
+
+#ifdef ENGINE_ADAPT_TO_WAZUH_QUEUES
+        // Define the dispatcher lambda
+        auto engine_input_dispatcher = 
+            [&orchestrator](wazuh::engine::input_adapters::CleanedMessageData&& cleaned_msg) {
+            const char* lambdaName = "EngineInputDispatcher"; // For logging
+
+            if (cleaned_msg.parsing_error) {
+                LOG_ERROR_L(lambdaName, "Error parsing raw message from queue: {}", cleaned_msg.raw_full_message);
+                // Optionally, send a metric or a specific error event
+                return;
+            }
+
+            // Create a base::Event (std::shared_ptr<json::Json>)
+            // base::Event is std::shared_ptr<json::Json>
+            auto event_json = std::make_shared<json::Json>(json::JsonType::Object);
+
+            try {
+                event_json->setString(cleaned_msg.raw_full_message, "/input/raw_message"); // Changed path for clarity
+                event_json->setString(cleaned_msg.actual_log_payload, "/message"); 
+                event_json->setString(cleaned_msg.agent_id, "/agent/id");
+                if (!cleaned_msg.agent_name.empty()) {
+                    event_json->setString(cleaned_msg.agent_name, "/agent/name");
+                }
+                if (!cleaned_msg.agent_ip.empty()) {
+                    event_json->setString(cleaned_msg.agent_ip, "/agent/ip");
+                }
+                event_json->setString(cleaned_msg.location, "/input/location"); // Changed path
+                
+                event_json->setString(messageSourceTypeToString(cleaned_msg.source_type), "/input/wazuh_source_type");
+
+                if (cleaned_msg.extracted_timestamp.has_value()) {
+                    event_json->setInt(cleaned_msg.extracted_timestamp.value(), "/input/timestamp_epoch");
+                }
+                if (!cleaned_msg.extracted_hostname.empty()){
+                    event_json->setString(cleaned_msg.extracted_hostname, "/input/hostname_extracted");
+                }
+                if (!cleaned_msg.extracted_program_name.empty()){
+                    event_json->setString(cleaned_msg.extracted_program_name, "/input/program_name_extracted");
+                }
+                event_json->setString("wazuh_queue_adapter", "/input/adapter_name");
+
+                if (orchestrator) {
+                    LOG_DEBUG_L(lambdaName, "Dispatching event for agent_id: {}, location: {}", cleaned_msg.agent_id, cleaned_msg.location);
+                    orchestrator->postEvent(event_json); // Already a shared_ptr
+                } else {
+                    LOG_ERROR_L(lambdaName, "Orchestrator is null, cannot post event.");
+                }
+            } catch (const std::exception& e) {
+                 LOG_ERROR_L(lambdaName, "Exception creating event from CleanedMessageData: {}. Raw: {}", e.what(), cleaned_msg.raw_full_message);
+            }
+        };
+
+        // Instantiate and Start WazuhDefaultQueueReader
+        // Default queue path is handled by WazuhDefaultQueueReader constructor if "" is passed.
+        // A specific config key could be added: confManager.get<std::string>(conf::key::WAZUH_QUEUE_INPUT_PATH)
+        g_wazuh_queue_reader = std::make_shared<wazuh::engine::input_adapters::WazuhDefaultQueueReader>("", engine_input_dispatcher);
+        
+        if (g_wazuh_queue_reader->initialize()) { 
+            if (g_wazuh_queue_reader->start()) {
+                LOG_INFO_L("Main", "WazuhDefaultQueueReader started for default Wazuh queue.");
+                exitHandler.add([&g_wazuh_queue_reader, functionName = logging::getLambdaName(__FUNCTION__, "exitHandlerWQR")]() {
+                    if (g_wazuh_queue_reader) {
+                        LOG_INFO_L(functionName.c_str(), "Stopping WazuhDefaultQueueReader...");
+                        g_wazuh_queue_reader->stop();
+                        LOG_INFO_L(functionName.c_str(), "WazuhDefaultQueueReader stopped.");
+                    }
+                });
+            } else {
+                 LOG_ERROR_L("Main", "Failed to start WazuhDefaultQueueReader for default Wazuh queue.");
+            }
+        } else {
+            LOG_ERROR_L("Main", "Failed to initialize WazuhDefaultQueueReader for default Wazuh queue.");
+        }
+#endif
 
         // VD Scanner
         {
