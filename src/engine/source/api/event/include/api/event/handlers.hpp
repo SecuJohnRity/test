@@ -10,10 +10,11 @@
 
 namespace api::event::handlers
 {
-using ProtolHandler = std::function<std::queue<base::Event>(std::string&&)>;
+// Corrected typo from ProtolHandler to ProtocolHandler
+using ProtocolHandler = std::function<std::queue<base::Event>(std::string&&)>;
 
 adapter::RouteHandler pushEvent(const std::shared_ptr<::router::IRouterAPI>& orchestrator,
-                                ProtolHandler protocolHandler,
+                                ProtocolHandler protocolHandler, // Corrected type
                                 const std::shared_ptr<::archiver::IArchiver>& archiver);
 
 } // namespace api::event::handlers

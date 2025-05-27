@@ -15,6 +15,7 @@ target_link_libraries(api_event
     api::adapter
     router::irouter
     archiver::iface
+    datagram_parser # Added datagram_parser
 )
 add_library(api::event ALIAS api_event)
 

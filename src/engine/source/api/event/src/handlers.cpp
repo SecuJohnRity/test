@@ -1,13 +1,16 @@
-#include <api/event/handlers.hpp>
-#include <base/logging.hpp>
+#include "api/event/handlers.hpp" // Self
+#include "base/logging.hpp"
+#include "api/event/ndJsonParser.hpp" // For api::event::protocol::getNDJsonParser
+#include "api/event/datagramParser.hpp" // For api::event::protocol::getDatagramParser
 
 // TODO add metrics
 // TODO add fallback file for events that could not be parsed ??
 
 namespace api::event::handlers
 {
+// Corrected typo from ProtolHandler to ProtocolHandler in parameter type
 adapter::RouteHandler pushEvent(const std::shared_ptr<::router::IRouterAPI>& orchestrator,
-                                ProtolHandler protocolHandler,
+                                ProtocolHandler protocolHandler,
                                 const std::shared_ptr<::archiver::IArchiver>& archiver)
 {
     return [lambdaName = logging::getLambdaName(__FUNCTION__, "apiHandler"),

@@ -10,6 +10,7 @@
 #include <api/archiver/handlers.hpp>
 #include <api/catalog/catalog.hpp>
 #include <api/event/ndJsonParser.hpp>
+#include <api/event/datagramParser.hpp> // Add this line
 #include <api/handlers.hpp>
 #include <api/policy/policy.hpp>
 #include <archiver/archiver.hpp>
@@ -633,6 +634,13 @@ int main(int argc, char* argv[])
                 httpsrv::Method::POST,
                 "/events/stateless",
                 api::event::handlers::pushEvent(orchestrator, api::event::protocol::getNDJsonParser(), archiver));
+            
+            // Add the new route for datagrams HERE
+            g_engineServer->addRoute(
+                httpsrv::Method::POST,
+                "/events/datagram", // New endpoint for datagrams
+                api::event::handlers::pushEvent(orchestrator, api::event::protocol::getDatagramParser(), archiver));
+            LOG_INFO("Datagram event endpoint '/events/datagram' registered."); // Optional: for logging
         }
     }
     catch (const std::exception& e)
