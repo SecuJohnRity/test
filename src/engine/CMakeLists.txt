@@ -224,6 +224,8 @@ add_subdirectory(${ENGINE_SOURCE_DIR}/router)
 add_subdirectory(${ENGINE_SOURCE_DIR}/conf)
 add_subdirectory(${ENGINE_SOURCE_DIR}/proto)
 add_subdirectory(${ENGINE_SOURCE_DIR}/metrics)
+add_subdirectory(${ENGINE_SOURCE_DIR}/common) # Added common module
+add_subdirectory(${ENGINE_SOURCE_DIR}/input)  # Added input module
 add_subdirectory(${ENGINE_SOURCE_DIR}/geo)
 add_subdirectory(${ENGINE_SOURCE_DIR}/queue)
 add_subdirectory(${ENGINE_SOURCE_DIR}/fs)
@@ -246,6 +248,8 @@ target_link_libraries(main
     kvdb
     eMessages
     metrics
+    engine_common # Added engine_common library
+    engine_input  # Added engine_input library
     geo
     schemf
     rbac
@@ -256,6 +260,7 @@ target_link_libraries(main
     api::event
     queue
     archiver
+    Threads::Threads # Ensure pthreads is linked for std::thread
 )
 
 # If ASAN, UBSAN or any other sanitizers are enabled do not link with static libraries

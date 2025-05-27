@@ -94,6 +94,11 @@ Conf::Conf(std::shared_ptr<IApiLoader> apiLoader)
     // Archiver module
     addUnit<bool>(key::ARCHIVER_ENABLED, "WAZUH_ARCHIVER_ENABLED", false);
     addUnit<std::string>(key::ARCHIVER_PATH, "WAZUH_ARCHIVER_PATH", "/var/lib/wazuh-server/engine/archives.json");
+
+    // Datagram Server module
+    addUnit<bool>(key::DATAGRAM_SERVER_ENABLED, "WAZUH_DATAGRAM_SERVER_ENABLED", true);
+    addUnit<std::string>(key::DATAGRAM_SERVER_HOST, "WAZUH_DATAGRAM_SERVER_HOST", "0.0.0.0");
+    addUnit<int>(key::DATAGRAM_SERVER_PORT, "WAZUH_DATAGRAM_SERVER_PORT", 5140);
 };
 
 void Conf::validate(const json::Json& config) const

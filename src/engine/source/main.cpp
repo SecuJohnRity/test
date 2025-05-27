@@ -39,6 +39,9 @@
 #include <store/store.hpp>
 #include <vdscanner/scanOrchestrator.hpp>
 
+#include <common/protocol/datagramParser.hpp> // Added for getDatagramParser
+#include <input/datagram/datagram_server.hpp> // Added for DatagramServer
+
 #include "base/utils/getExceptionStack.hpp"
 #include "stackExecutor.hpp"
 
@@ -123,6 +126,7 @@ int main(int argc, char* argv[])
     std::shared_ptr<IIndexerConnector> iConnector;
     std::shared_ptr<httpsrv::Server> apiServer;
     std::shared_ptr<archiver::Archiver> archiver;
+    std::shared_ptr<engine::input::DatagramServer> datagramServer;
 
     try
     {
@@ -405,6 +409,61 @@ int main(int argc, char* argv[])
 
             exitHandler.add([orchestrator]() { orchestrator->stop(); });
             LOG_INFO("Router initialized.");
+        }
+
+        // Datagram Server (Legacy Wazuh Protocol Support)
+        {
+            bool datagram_server_enabled = confManager.get<bool>(conf::key::DATAGRAM_SERVER_ENABLED);
+            std::string datagram_server_host = confManager.get<std::string>(conf::key::DATAGRAM_SERVER_HOST);
+            int datagram_server_port = confManager.get<int>(conf::key::DATAGRAM_SERVER_PORT);
+
+            if (datagram_server_enabled)
+            {
+                if (!orchestrator) {
+                    LOG_ERROR("Orchestrator is null, cannot start DatagramServer.");
+                    // Handle error appropriately, maybe throw or exit
+                } else {
+                    try
+                    {
+                        auto datagram_parser = common::protocol::getDatagramParser();
+                        datagramServer = std::make_shared<engine::input::DatagramServer>(
+                            orchestrator,         // The main event router/orchestrator
+                            datagram_parser,      // The parser function
+                            datagram_server_host, // Host/IP to listen on
+                            datagram_server_port  // Port to listen on
+                        );
+
+                        if (datagramServer->start())
+                        {
+                            LOG_INFO("Datagram Server for legacy Wazuh protocol started on {}:{}", datagram_server_host, datagram_server_port);
+                            // Add to exit handler for graceful shutdown
+                            exitHandler.add(
+                                [datagramServer, functionName = logging::getLambdaName(__FUNCTION__, "exitHandler_datagramServer")]()
+                                {
+                                    if (datagramServer)
+                                    {
+                                        datagramServer->stop();
+                                        LOG_INFO_L(functionName.c_str(), "Datagram Server stopped.");
+                                    }
+                                });
+                        }
+                        else
+                        {
+                            LOG_ERROR("Failed to start Datagram Server on {}:{}", datagram_server_host, datagram_server_port);
+                            // Potentially throw an error or exit if this is critical
+                        }
+                    }
+                    catch (const std::exception& e)
+                    {
+                        LOG_ERROR("Failed to initialize or start Datagram Server: {}", e.what());
+                        // Potentially throw an error or exit
+                    }
+                }
+            }
+            else
+            {
+                LOG_INFO("Datagram Server for legacy Wazuh protocol is disabled by configuration.");
+            }
         }
 
         // VD Scanner

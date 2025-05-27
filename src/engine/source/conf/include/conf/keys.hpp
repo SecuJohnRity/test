@@ -38,6 +38,11 @@ constexpr std::string_view SERVER_EVENT_SOCKET = "/engine/server/event_socket";
 constexpr std::string_view SERVER_API_SOCKET = "/engine/server/api_socket";
 constexpr std::string_view SERVER_API_TIMEOUT = "/engine/server/api_timeout";
 
+// Datagram Server (Syslog/Legacy Wazuh Protocol Input)
+constexpr char DATAGRAM_SERVER_ENABLED[] = "engine.input.datagram.enabled";
+constexpr char DATAGRAM_SERVER_HOST[] = "engine.input.datagram.host";
+constexpr char DATAGRAM_SERVER_PORT[] = "engine.input.datagram.port";
+
 constexpr std::string_view TZDB_PATH = "/engine/tzdb/path";
 constexpr std::string_view TZDB_AUTO_UPDATE = "/engine/tzdb/auto_update";
 
