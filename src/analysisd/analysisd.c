@@ -42,6 +42,7 @@
 #include "state.h"
 #include "syscheck_op.h"
 #include "lists_make.h"
+#include "shared/time_op.h"
 
 #ifdef PRELUDE_OUTPUT_ENABLED
 #include "output/prelude.h"
@@ -231,6 +232,8 @@ static int reported_eps_drop = 0;
 static int reported_eps_drop_hourly = 0;
 
 /* Mutexes */
+pthread_mutex_t g_time_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_stats_vars_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t decode_syscheck_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t process_event_check_hour_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t process_event_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -2024,7 +2027,10 @@ void * w_process_event_thread(__attribute__((unused)) void * id){
                 saved_log = lf->full_log;
 
                 lf->generated_rule = stats_rule;
-                lf->full_log = __stats_comment;
+
+                pthread_mutex_lock(&g_stats_vars_mutex); // Lock for reading __stats_comment
+                lf->full_log = __stats_comment; // Read __stats_comment
+                pthread_mutex_unlock(&g_stats_vars_mutex); // Unlock after reading
 
                 /* Alert for statistical analysis */
                 if (stats_rule && (stats_rule->alert_opts & DO_LOGALERT)) {
@@ -2227,7 +2233,8 @@ void * w_log_rotate_thread(__attribute__((unused)) void * args){
 
     while(1){
         w_guard_mutex_variable(current_time_mutex, (current_time = time(NULL)));
-        localtime_r(&c_time, &tm_result);
+        pthread_mutex_lock(&g_c_timespec_mutex); // Lock before accessing c_timespec implicitly via c_time
+        localtime_r(&c_time, &tm_result); // c_time is c_timespec.tv_sec
         day = tm_result.tm_mday;
         year = tm_result.tm_year + 1900;
         strncpy(mon, month[tm_result.tm_mon], 3);
@@ -2235,16 +2242,19 @@ void * w_log_rotate_thread(__attribute__((unused)) void * args){
         /* Set the global hour/weekday */
         __crt_hour = tm_result.tm_hour;
         __crt_wday = tm_result.tm_wday;
+        pthread_mutex_unlock(&g_c_timespec_mutex); // Unlock after c_timespec derived values are set
 
         w_mutex_lock(&writer_threads_mutex);
 
         w_log_flush();
-        if (thishour != __crt_hour) {
+
+        pthread_mutex_lock(&g_time_mutex); // Lock for operations on thishour, today, prev_month, prev_year
+        if (thishour != __crt_hour) { // thishour (read), __crt_hour (read, value is from g_c_timespec protected section)
             /* Search all the rules and print the number
                 * of alerts that each one fired
                 */
-            DumpLogstats();
-            thishour = __crt_hour;
+            DumpLogstats(); // Uses thishour, prev_year, prev_month, today
+            thishour = __crt_hour; // thishour (write)
 
             /* Reset EPS logging flag to avoid flodding */
             if (reported_eps_drop_hourly && !reported_eps_drop) {
@@ -2258,18 +2268,20 @@ void * w_log_rotate_thread(__attribute__((unused)) void * args){
                     Update_Hour();
                 }
 
-                if (OS_GetLogLocation(day, year, mon) < 0) {
+                if (OS_GetLogLocation(day, year, mon) < 0) { // Uses day, year, mon (from g_c_timespec section)
+                    pthread_mutex_unlock(&g_time_mutex); // Unlock before exit
                     merror_exit("Error allocating log files");
                 }
 
-                today = day;
-                memcpy(prev_month, mon, sizeof(mon));
-                prev_year = year;
+                today = day; // today (write)
+                memcpy(prev_month, mon, sizeof(mon)); // prev_month (write)
+                prev_year = year; // prev_year (write)
             }
         }
+        pthread_mutex_unlock(&g_time_mutex); // Unlock after operations
 
-        OS_RotateLogs(day, year, mon);
-        w_mutex_unlock(&writer_threads_mutex);
+        OS_RotateLogs(day, year, mon); // Uses day, year, mon (from g_c_timespec section)
+        w_mutex_unlock(&writer_threads_mutex); // Existing mutex unlock
         sleep(1);
     }
 }

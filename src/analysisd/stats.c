@@ -228,67 +228,77 @@ void Update_Hour()
 /* Check Hourly stats */
 int Check_Hour()
 {
-    _CHour[__crt_hour]++;
-    _CWHour[__crt_wday][__crt_hour]++;
+    int local_crt_hour;
+    int local_crt_wday; // Added to explicitly capture __crt_wday under lock
+
+    pthread_mutex_lock(&g_time_mutex);
+    local_crt_hour = __crt_hour;
+    local_crt_wday = __crt_wday; // Capture __crt_wday under the same lock
+    _CHour[local_crt_hour]++;
+    _CWHour[local_crt_wday][local_crt_hour]++;
+    pthread_mutex_unlock(&g_time_mutex);
 
     if (_RHour[24] <= 2) {
         return (0);
     }
 
+    pthread_mutex_lock(&g_stats_vars_mutex); // Lock for _fired, _cignorehour, and gethour() dependencies
+
     /* Checking if any message was already fired for this hour */
-    if ((_daily_errors >= 3) || ((_fired == 1) && (_cignorehour == __crt_hour))) {
+    if ((_daily_errors >= 3) || ((_fired == 1) && (_cignorehour == local_crt_hour))) {
+        pthread_mutex_unlock(&g_stats_vars_mutex);
         return (0);
     }
 
-    else if (_cignorehour != __crt_hour) {
-        _cignorehour = __crt_hour;
-        _fired = 0;
+    else if (_cignorehour != local_crt_hour) {
+        _cignorehour = local_crt_hour; // Write to _cignorehour
+        _fired = 0;                   // Write to _fired
     }
 
     /* Check if passed the threshold */
-    if (_RHour[__crt_hour] != 0) {
-        if (_CHour[__crt_hour] > (_RHour[__crt_hour])) {
-            if (_CHour[__crt_hour] > (gethour(_RHour[__crt_hour]))) {
+    if (_RHour[local_crt_hour] != 0) {
+        if (_CHour[local_crt_hour] > (_RHour[local_crt_hour])) {
+            if (_CHour[local_crt_hour] > (gethour(_RHour[local_crt_hour]))) { // gethour() reads mindiff, maxdiff, percent_diff
                 /* snprintf will null terminate */
                 snprintf(__stats_comment, 191,
                          "The average number of logs"
                          " between %d:00 and %d:00 is %d. We "
-                         "reached %d.", __crt_hour, __crt_hour + 1,
-                         _RHour[__crt_hour], _CHour[__crt_hour]);
-
-
-                _fired = 1;
-                _daily_errors++;
+                         "reached %d.", local_crt_hour, local_crt_hour + 1,
+                         _RHour[local_crt_hour], _CHour[local_crt_hour]);
+                _fired = 1; // Write to _fired
+                _daily_errors++; // Write to _daily_errors
+                pthread_mutex_unlock(&g_stats_vars_mutex);
                 return (1);
             }
         }
     }
 
     /* We need to have at least 3 days of stats */
-    if (_RWHour[__crt_wday][24] <= 2) {
+    if (_RWHour[local_crt_wday][24] <= 2) { // Use local_crt_wday
+        pthread_mutex_unlock(&g_stats_vars_mutex);
         return (0);
     }
 
     /* Check for the hour during a specific day of the week */
-    if (_RWHour[__crt_wday][__crt_hour] != 0) {
-        if (_CWHour[__crt_wday][__crt_hour] > _RWHour[__crt_wday][__crt_hour]) {
-            if (_CWHour[__crt_wday][__crt_hour] >
-                    gethour(_RWHour[__crt_wday][__crt_hour])) {
+    if (_RWHour[local_crt_wday][local_crt_hour] != 0) { // Use local_crt_wday and local_crt_hour
+        if (_CWHour[local_crt_wday][local_crt_hour] > _RWHour[local_crt_wday][local_crt_hour]) { // Use local_crt_wday and local_crt_hour
+            if (_CWHour[local_crt_wday][local_crt_hour] > // Use local_crt_wday and local_crt_hour
+                    gethour(_RWHour[local_crt_wday][local_crt_hour])) { // Use local_crt_wday and local_crt_hour, gethour()
                 snprintf(__stats_comment, 191,
                          "The average number of logs"
                          " between %d:00 and %d:00 on %s is %d. We"
-                         " reached %d.", __crt_hour, __crt_hour + 1,
-                         weekdays[__crt_wday],
-                         _RWHour[__crt_wday][__crt_hour],
-                         _CWHour[__crt_wday][__crt_hour]);
-
-
-                _fired = 1;
-                _daily_errors++;
+                         " reached %d.", local_crt_hour, local_crt_hour + 1,
+                         weekdays[local_crt_wday], // Use local_crt_wday
+                         _RWHour[local_crt_wday][local_crt_hour], // Use local_crt_wday and local_crt_hour
+                         _CWHour[local_crt_wday][local_crt_hour]); // Use local_crt_wday and local_crt_hour
+                _fired = 1; // Write to _fired
+                _daily_errors++; // Write to _daily_errors
+                pthread_mutex_unlock(&g_stats_vars_mutex);
                 return (1);
             }
         }
     }
+    pthread_mutex_unlock(&g_stats_vars_mutex);
     return (0);
 }
 
@@ -398,6 +408,7 @@ int Start_Hour(int t_id, int threads_number)
 
     Start_Time();
 
+    pthread_mutex_lock(&g_stats_vars_mutex);
     /* Clear some memory */
     memset(__stats_comment, '\0', 192);
 
@@ -413,6 +424,7 @@ int Start_Hour(int t_id, int threads_number)
     percent_diff = getDefine_Int("analysisd",
                                  "stats_percent_diff",
                                  5, 9999);
+    pthread_mutex_unlock(&g_stats_vars_mutex);
 
     /* Last three messages
      * They are used to keep track of the last
@@ -434,11 +446,21 @@ void Start_Time(){
     struct tm tm_result = { .tm_sec = 0 };
 
     /* Current time */
-    localtime_r(&c_time, &tm_result);
+    localtime_r(&c_time, &tm_result); // c_time is from c_timespec, already protected during its setting
+
+    pthread_mutex_lock(&g_time_mutex);
+    today = tm_result.tm_mday;
+    thishour = tm_result.tm_hour;
+    prev_year = tm_result.tm_year + 1900;
+    strncpy(prev_month, l_month[tm_result.tm_mon], 3);
+    prev_month[3] = '\0';
+    pthread_mutex_unlock(&g_time_mutex);
 
     /* Other global variables */
+    pthread_mutex_lock(&g_stats_vars_mutex);
     _fired = 0;
     _cignorehour = 0;
+    pthread_mutex_unlock(&g_stats_vars_mutex);
 
     today = tm_result.tm_mday;
     thishour = tm_result.tm_hour;

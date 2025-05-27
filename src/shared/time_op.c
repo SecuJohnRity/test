@@ -13,7 +13,11 @@
  * @date October 4, 2017
  */
 
+#include <pthread.h>
 #include "shared.h"
+#include "time_op.h"
+
+pthread_mutex_t g_c_timespec_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifndef WIN32
 
@@ -25,6 +29,7 @@
 // Get the current calendar time
 
 void gettime(struct timespec *ts) {
+    pthread_mutex_lock(&g_c_timespec_mutex);
 #ifdef __MACH__
     clock_serv_t cclock;
     mach_timespec_t mts;
@@ -36,6 +41,7 @@ void gettime(struct timespec *ts) {
 #else
     clock_gettime(CLOCK_REALTIME, ts);
 #endif
+    pthread_mutex_unlock(&g_c_timespec_mutex);
 }
 
 #else
@@ -66,6 +72,7 @@ long long int get_windows_file_time_epoch(FILETIME ft) {
 }
 
 void gettime(struct timespec * ts) {
+    pthread_mutex_lock(&g_c_timespec_mutex);
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
 
@@ -75,6 +82,7 @@ void gettime(struct timespec * ts) {
 
     ts->tv_sec = li.QuadPart / 10000000 - EPOCH_DIFFERENCE;
     ts->tv_nsec = (li.QuadPart % 10000000) * 100;
+    pthread_mutex_unlock(&g_c_timespec_mutex);
 }
 
 #endif

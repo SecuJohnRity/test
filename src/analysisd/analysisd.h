@@ -12,6 +12,7 @@
 #define LOGAUDIT_H
 
 #include <sys/types.h>
+#include <pthread.h>
 
 #include "decoders/decoder.h"
 #include "rules.h"
@@ -29,6 +30,9 @@ extern int __crt_wday;
 
 extern struct timespec c_timespec; /* Current time of event. Used everywhere */
 #define c_time c_timespec.tv_sec
+
+extern pthread_mutex_t g_time_mutex;
+extern pthread_mutex_t g_stats_vars_mutex;
 
 /* Local host name */
 extern char __shost[512];
