@@ -25,3 +25,21 @@ target_link_libraries(datagram_parser
 # Optional: Add install rule
 # install(TARGETS datagram_parser DESTINATION lib)
 # install(FILES datagram_parser.hpp DESTINATION include/datagram_parser)
+
+if(ENGINE_BUILD_TEST)
+    enable_testing()
+    find_package(GTest REQUIRED) # Makes GTest::gtest and GTest::gtest_main available
+
+    add_executable(datagram_parser_test test/datagram_parser_test.cpp)
+
+    target_link_libraries(datagram_parser_test 
+        PRIVATE 
+            datagram_parser 
+            base # For json.hpp, timeUtils.hpp directly used in tests
+            GTest::gtest 
+            GTest::gtest_main
+    )
+    
+    include(GoogleTest) # For gtest_discover_tests
+    gtest_discover_tests(datagram_parser_test)
+endif()
