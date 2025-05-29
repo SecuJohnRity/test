@@ -3,11 +3,13 @@
 
 #include <memory>
 #include <shared_mutex>
+#include <vector> // Added for processDatagramPacket
 
 #include <builder/ibuilder.hpp>
 
 #include "irouter.hpp"
 #include "table.hpp"
+#include "../../datagram/datagram_socket.h" // Added for datagram support
 
 namespace router
 {
@@ -35,6 +37,7 @@ private:
     mutable std::shared_mutex m_mutex;     ///< Mutex for the table.
 
     std::shared_ptr<EnvironmentBuilder> m_envBuilder; ///< Environment builder for create new entries
+    std::unique_ptr<DatagramSocket> datagramSocket_; ///< Added for datagram support
 
 public:
     /**
@@ -94,6 +97,13 @@ public:
      * @copydoc IRouter::ingest
      */
     void ingest(base::Event&& event) override;
+
+    /**
+     * @brief Processes a raw datagram packet.
+     * Placeholder for now.
+     * @param packet_data The raw data received from the datagram socket.
+     */
+    void processDatagramPacket(const std::vector<char>& packet_data);
 };
 
 } // namespace router

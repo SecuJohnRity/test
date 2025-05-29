@@ -48,6 +48,13 @@ constexpr std::string_view METRICS_EXPORT_TIMEOUT = "/engine/metrics/export_time
 constexpr std::string_view ARCHIVER_ENABLED = "/engine/archiver/enabled";
 constexpr std::string_view ARCHIVER_PATH = "/engine/archiver/path";
 
+// Datagram Socket configuration keys
+constexpr std::string_view DATAGRAM_ENABLED = "/engine/datagram/enabled";
+constexpr std::string_view DATAGRAM_PORT = "/engine/datagram/port";
+constexpr std::string_view DATAGRAM_IP_ADDRESS = "/engine/datagram/ip_address";
+constexpr std::string_view DATAGRAM_OVERFLOW_STRATEGY = "/engine/datagram/overflow_strategy"; // e.g., "block", "discard", "buffer_to_disk"
+constexpr std::string_view DATAGRAM_BUFFER_SIZE = "/engine/datagram/buffer_size";
+
 }; // namespace conf::key
 
 #endif // _CONF_KEYS_HPP

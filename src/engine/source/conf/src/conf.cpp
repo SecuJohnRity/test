@@ -94,6 +94,13 @@ Conf::Conf(std::shared_ptr<IApiLoader> apiLoader)
     // Archiver module
     addUnit<bool>(key::ARCHIVER_ENABLED, "WAZUH_ARCHIVER_ENABLED", false);
     addUnit<std::string>(key::ARCHIVER_PATH, "WAZUH_ARCHIVER_PATH", "/var/lib/wazuh-server/engine/archives.json");
+
+    // Datagram Socket Configuration
+    addUnit<bool>(key::DATAGRAM_ENABLED, "WAZUH_DATAGRAM_ENABLED", false);
+    addUnit<int>(key::DATAGRAM_PORT, "WAZUH_DATAGRAM_PORT", 514);
+    addUnit<std::string>(key::DATAGRAM_IP_ADDRESS, "WAZUH_DATAGRAM_IP_ADDRESS", "0.0.0.0");
+    addUnit<std::string>(key::DATAGRAM_OVERFLOW_STRATEGY, "WAZUH_DATAGRAM_OVERFLOW_STRATEGY", "discard"); // Options: "block", "discard", "buffer_to_disk"
+    addUnit<int>(key::DATAGRAM_BUFFER_SIZE, "WAZUH_DATAGRAM_BUFFER_SIZE", 1048576); // Default 1MB
 };
 
 void Conf::validate(const json::Json& config) const
