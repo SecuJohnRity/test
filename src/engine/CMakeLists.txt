@@ -57,7 +57,7 @@ if(DEFINED VCPKG_TARGET_TRIPLET)
     message(STATUS "Using VCPKG triplet: ${VCPKG_TARGET_TRIPLET}")
 else()
     message(WARNING "VCPKG_TARGET_TRIPLET is not defined. Make sure you are using the vcpkg toolchain.")
-    FATAL_ERROR("VCPKG_TARGET_TRIPLET is not defined.")
+    # FATAL_ERROR("VCPKG_TARGET_TRIPLET is not defined.") # Commented out
 endif()
 
 ####################################################################################################
@@ -154,47 +154,47 @@ endfunction()
 # Build test
 if(ENGINE_BUILD_TEST)
 include(CTest)
-find_and_create_imported_target("GTest" "GTest::gtest")
-find_and_create_imported_target("GTest" "GTest::gtest_main")
-find_and_create_imported_target("GTest" "GTest::gmock")
-find_and_create_imported_target("GTest" "GTest::gmock_main")
+# find_and_create_imported_target("GTest" "GTest::gtest")
+# find_and_create_imported_target("GTest" "GTest::gtest_main")
+# find_and_create_imported_target("GTest" "GTest::gmock")
+# find_and_create_imported_target("GTest" "GTest::gmock_main")
 include(GoogleTest)
 endif(ENGINE_BUILD_TEST)
 
-find_and_create_imported_target("RapidJSON" "RapidJSON::RapidJSON")
-find_and_create_imported_target("rxcpp" "RxCpp::RxCpp")
-# yaml-cpp::yaml-cpp vs yaml-cpp #FIXME 70 stars on github
-find_and_create_imported_target("yaml-cpp" "yaml-cpp::yaml-cpp")
-find_and_create_imported_target("spdlog" "spdlog::spdlog")
-find_and_create_imported_target("FastFloat" "FastFloat::fast-float")
-find_and_create_imported_target("fmt" "fmt::fmt-header-only")
-find_and_create_imported_target("RocksDB" "RocksDB::rocksdb")
-find_and_create_imported_target("Taskflow" "Taskflow::Taskflow")
-find_and_create_imported_target("unofficial-concurrentqueue" "unofficial-concurrentqueue::concurrentqueue")
-find_and_create_imported_target("re2" "re2::re2")
-find_and_create_imported_target("CURL" "CURL::libcurl")
-find_and_create_imported_target("maxminddb" "maxminddb::maxminddb")
-find_and_create_imported_target("benchmark" "benchmark::benchmark")
-find_and_create_imported_target("pugixml" "pugixml::pugixml")
+# find_and_create_imported_target("RapidJSON" "RapidJSON::RapidJSON")
+# find_and_create_imported_target("rxcpp" "RxCpp::RxCpp")
+# # yaml-cpp::yaml-cpp vs yaml-cpp #FIXME 70 stars on github
+# find_and_create_imported_target("yaml-cpp" "yaml-cpp::yaml-cpp")
+# find_and_create_imported_target("spdlog" "spdlog::spdlog")
+# find_and_create_imported_target("FastFloat" "FastFloat::fast-float")
+# find_and_create_imported_target("fmt" "fmt::fmt-header-only")
+# find_and_create_imported_target("RocksDB" "RocksDB::rocksdb")
+# find_and_create_imported_target("Taskflow" "Taskflow::Taskflow")
+# find_and_create_imported_target("unofficial-concurrentqueue" "unofficial-concurrentqueue::concurrentqueue")
+# find_and_create_imported_target("re2" "re2::re2")
+# find_and_create_imported_target("CURL" "CURL::libcurl")
+# find_and_create_imported_target("maxminddb" "maxminddb::maxminddb")
+# find_and_create_imported_target("benchmark" "benchmark::benchmark")
+# find_and_create_imported_target("pugixml" "pugixml::pugixml")
 
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::api")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::sdk")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::logs")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::metrics")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::resources")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::api")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::sdk")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::logs")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::metrics")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::resources")
 
-find_and_create_imported_target("Protobuf" "protobuf::libprotobuf")
-find_and_create_imported_target("flatbuffers" "flatbuffers::flatbuffers")
-find_and_create_imported_target("httplib" "httplib::httplib")
+# find_and_create_imported_target("Protobuf" "protobuf::libprotobuf")
+find_and_create_imported_target("flatbuffers" "flatbuffers::flatbuffers") # Keep - Not in the list of 20
+# find_and_create_imported_target("httplib" "httplib::httplib")
 
-find_and_create_imported_target("date" "date::date")
-find_and_create_imported_target("date" "date::date-tz")
+# find_and_create_imported_target("date" "date::date")
+# find_and_create_imported_target("date" "date::date-tz")
 
-find_and_create_imported_target("liblzma" "liblzma::liblzma")
-find_and_create_imported_target_ex("LibArchive" "LibArchive::LibArchive")
+find_and_create_imported_target("liblzma" "liblzma::liblzma") # Keep - Not in the list of 20
+find_and_create_imported_target_ex("LibArchive" "LibArchive::LibArchive") # Keep - Not in the list of 20
 
-find_and_create_imported_target_ex("OpenSSL" "OpenSSL::SSL")
-find_and_create_imported_target_ex("OpenSSL" "OpenSSL::Crypto")
+# find_and_create_imported_target_ex("OpenSSL" "OpenSSL::SSL")
+# find_and_create_imported_target_ex("OpenSSL" "OpenSSL::Crypto")
 
 ####################################################################################################
 # Targets

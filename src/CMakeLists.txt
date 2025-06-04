@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.12.4)
 
 project(Wazuh)
 
+set(ENGINE_DEPS_INSTALL_DIR ${CMAKE_SOURCE_DIR}/deps/build)
+
 enable_testing()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -131,6 +133,48 @@ include_directories(${SRC_FOLDER}/external/zlib/)
 include_directories(${SRC_FOLDER}/external/zlib/contrib/)
 include_directories(${SRC_FOLDER}/external/libarchive/libarchive/)
 
+# Engine dependencies
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/openssl/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/openssl/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/protobuf/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/protobuf/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/fmt/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/fmt/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/spdlog/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/spdlog/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/date/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/date/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/fast-float/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/fast-float/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/rapidjson/include)
+# rapidjson is header-only via CMake install, but might create a lib dir for cmake files
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/pugixml/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/pugixml/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/yaml-cpp/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/yaml-cpp/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/re2/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/re2/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/curl/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/curl/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/libmaxminddb/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/libmaxminddb/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/concurrentqueue/include)
+# concurrentqueue is header-only
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/rxcpp/include)
+# rxcpp is header-only
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/taskflow/include)
+# taskflow is header-only
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/rocksdb/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/rocksdb/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/opentelemetry-cpp/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/opentelemetry-cpp/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/cpp-httplib/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/cpp-httplib/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/gtest/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/gtest/lib)
+include_directories(${ENGINE_DEPS_INSTALL_DIR}/benchmark/include)
+link_directories(${ENGINE_DEPS_INSTALL_DIR}/benchmark/lib)
+
 add_subdirectory(shared_modules/utils)
 add_subdirectory(shared_modules/router)
 add_subdirectory(shared_modules/content_manager)
@@ -141,3 +185,6 @@ add_subdirectory(shared_modules/indexer_connector)
 add_subdirectory(wazuh_modules/vulnerability_scanner)
 add_subdirectory(shared_modules/keystore)
 add_subdirectory(wazuh_modules/inventory_harvester)
+
+# Add engine
+add_subdirectory(engine)
