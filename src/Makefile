@@ -57,6 +57,101 @@ ARCH_FLAGS =
 
 ROUTE_PATH := $(shell pwd)
 EXTERNAL_JSON=external/cJSON/
+
+EXTERNAL_FMT=external/fmt/
+FMT_VERSION=8.1.1
+FMT_TARBALL=fmt-$(FMT_VERSION).tar.gz
+FMT_SOURCE_DIR_NAME=fmt-$(FMT_VERSION)
+FMT_SOURCE_EXTRACT_PATH=$(EXTERNAL_FMT)$(FMT_SOURCE_DIR_NAME)
+FMT_BUILD_DIR=$(EXTERNAL_FMT)build
+FMT_INSTALL_DIR=$(EXTERNAL_FMT)install_dir
+FMT_LIB_FILE=$(FMT_INSTALL_DIR)/lib/libfmt.a
+
+EXTERNAL_SPDLOG=external/spdlog/
+SPDLOG_VERSION=1.14.1
+SPDLOG_TARBALL=spdlog-$(SPDLOG_VERSION).tar.gz
+SPDLOG_SOURCE_DIR_NAME=spdlog-$(SPDLOG_VERSION)
+SPDLOG_SOURCE_EXTRACT_PATH=$(EXTERNAL_SPDLOG)$(SPDLOG_SOURCE_DIR_NAME)
+SPDLOG_BUILD_DIR=$(EXTERNAL_SPDLOG)build
+SPDLOG_INSTALL_DIR=$(EXTERNAL_SPDLOG)install_dir
+SPDLOG_LIB_FILE=$(SPDLOG_INSTALL_DIR)/lib/libspdlog.a
+
+EXTERNAL_DATE=external/date/
+DATE_COMMIT_SHA_PREFIX=1ead6715
+DATE_TARBALL=date-$(DATE_COMMIT_SHA_PREFIX).tar.gz
+DATE_SOURCE_DIR=$(EXTERNAL_DATE)date_source # Fixed name after rename
+DATE_BUILD_DIR=$(EXTERNAL_DATE)build
+DATE_INSTALL_DIR=$(EXTERNAL_DATE)install_dir
+DATE_LIB_FILE=$(DATE_INSTALL_DIR)/lib/libdate.a
+DATE_TZ_LIB_FILE=$(DATE_INSTALL_DIR)/lib/libtz.a
+
+EXTERNAL_FAST_FLOAT=external/fast_float/
+FAST_FLOAT_VERSION=6.1.4
+FAST_FLOAT_TARBALL=date-6_1_4.tar.gz # Actual tarball name for fast_float
+FAST_FLOAT_SOURCE_TMP_EXTRACT_DIR=$(EXTERNAL_FAST_FLOAT)tmp_ff_src
+FAST_FLOAT_BUILD_DIR=$(EXTERNAL_FAST_FLOAT)build
+FAST_FLOAT_INSTALL_DIR=$(EXTERNAL_FAST_FLOAT)install_dir
+FAST_FLOAT_INCLUDE_MARKER=$(FAST_FLOAT_INSTALL_DIR)/include/fast_float/fast_float.h
+
+EXTERNAL_RAPIDJSON=external/rapidjson/
+RAPIDJSON_COMMIT_PREFIX=a95e013b
+RAPIDJSON_TARBALL=rapidjson-$(RAPIDJSON_COMMIT_PREFIX).tar.gz
+RAPIDJSON_SOURCE_DIR=$(EXTERNAL_RAPIDJSON)rapidjson_source
+RAPIDJSON_BUILD_DIR=$(EXTERNAL_RAPIDJSON)build
+RAPIDJSON_INSTALL_DIR=$(EXTERNAL_RAPIDJSON)install_dir
+RAPIDJSON_INCLUDE_MARKER=$(RAPIDJSON_INSTALL_DIR)/include/rapidjson/rapidjson.h
+
+EXTERNAL_PUGIXML=external/pugixml/
+PUGIXML_VERSION=1.15
+PUGIXML_TARBALL_ACTUAL=pugixml-1_15.tar.gz
+PUGIXML_SOURCE_DIR_NAME=pugixml-$(PUGIXML_VERSION)
+PUGIXML_SOURCE_EXTRACT_PATH=$(EXTERNAL_PUGIXML)$(PUGIXML_SOURCE_DIR_NAME)
+PUGIXML_BUILD_DIR=$(EXTERNAL_PUGIXML)build
+PUGIXML_INSTALL_DIR=$(EXTERNAL_PUGIXML)install_dir
+PUGIXML_LIB_FILE=$(PUGIXML_INSTALL_DIR)/lib/libpugixml.a
+
+EXTERNAL_YAMLCPP=external/yaml-cpp/
+YAMLCPP_VERSION=0.8.0
+YAMLCPP_TARBALL=yaml-cpp-$(YAMLCPP_VERSION).tar.gz # Assumed name, confirm if different
+YAMLCPP_SOURCE_DIR_NAME=yaml-cpp-$(YAMLCPP_VERSION)
+YAMLCPP_SOURCE_EXTRACT_PATH=$(EXTERNAL_YAMLCPP)$(YAMLCPP_SOURCE_DIR_NAME)
+YAMLCPP_BUILD_DIR=$(EXTERNAL_YAMLCPP)build
+YAMLCPP_INSTALL_DIR=$(EXTERNAL_YAMLCPP)install_dir
+YAMLCPP_LIB_FILE=$(YAMLCPP_INSTALL_DIR)/lib/libyaml-cpp.a
+
+EXTERNAL_RE2=external/re2/
+RE2_VERSION=2024-06-01
+RE2_TARBALL=re2-$(RE2_VERSION).tar.gz
+RE2_SOURCE_DIR_NAME=re2-$(RE2_VERSION)
+RE2_SOURCE_EXTRACT_PATH=$(EXTERNAL_RE2)$(RE2_SOURCE_DIR_NAME)
+RE2_BUILD_DIR=$(EXTERNAL_RE2)build
+RE2_INSTALL_DIR=$(EXTERNAL_RE2)install_dir
+RE2_LIB_FILE=$(RE2_INSTALL_DIR)/lib/libre2.a
+
+EXTERNAL_LIBMAXMINDDB=external/libmaxminddb/
+LIBMAXMINDDB_VERSION=1.9.1
+LIBMAXMINDDB_TARBALL=libmaxminddb-$(LIBMAXMINDDB_VERSION).tar.gz
+LIBMAXMINDDB_SOURCE_DIR_NAME=libmaxminddb-$(LIBMAXMINDDB_VERSION)
+LIBMAXMINDDB_SOURCE_EXTRACT_PATH=$(EXTERNAL_LIBMAXMINDDB)$(LIBMAXMINDDB_SOURCE_DIR_NAME)
+LIBMAXMINDDB_INSTALL_DIR=$(EXTERNAL_LIBMAXMINDDB)install_dir
+LIBMAXMINDDB_LIB_FILE=$(LIBMAXMINDDB_INSTALL_DIR)/lib/libmaxminddb.a
+
+EXTERNAL_CONCURRENTQUEUE=external/concurrentqueue/
+CONCURRENTQUEUE_VERSION=1.0.4
+CONCURRENTQUEUE_TARBALL=concurrentqueue-$(CONCURRENTQUEUE_VERSION).tar.gz
+CONCURRENTQUEUE_SOURCE_TMP_EXTRACT_DIR=$(EXTERNAL_CONCURRENTQUEUE)tmp_cq_src
+CONCURRENTQUEUE_INSTALL_DIR=$(EXTERNAL_CONCURRENTQUEUE)install_dir
+CONCURRENTQUEUE_INCLUDE_MARKER=$(CONCURRENTQUEUE_INSTALL_DIR)/include/concurrentqueue.h
+
+EXTERNAL_RXCPP=external/rxcpp/
+RXCPP_VERSION=4.1.1
+RXCPP_TARBALL=rxcpp-$(RXCPP_VERSION).tar.gz
+RXCPP_SOURCE_DIR_NAME=RxCpp-$(RXCPP_VERSION)
+RXCPP_SOURCE_EXTRACT_PATH=$(EXTERNAL_RXCPP)$(RXCPP_SOURCE_DIR_NAME)
+RXCPP_BUILD_DIR=$(EXTERNAL_RXCPP)build
+RXCPP_INSTALL_DIR=$(EXTERNAL_RXCPP)install_dir
+RXCPP_INCLUDE_MARKER=$(RXCPP_INSTALL_DIR)/include/rxcpp/rx.hpp
+RXCPP_DISABLE_TESTS_PATCH_FILE=rxcpp-disable-tests.patch
 EXTERNAL_ZLIB=external/zlib/
 EXTERNAL_SQLITE=external/sqlite/
 EXTERNAL_OPENSSL=external/openssl/
@@ -436,6 +531,16 @@ endif
 OSSEC_CFLAGS+=${DEFINES}
 OSSEC_CFLAGS+=-pipe -Wall -Wextra -std=gnu99
 OSSEC_CFLAGS+=-I./ -I./headers/ -I${EXTERNAL_OPENSSL}include -I$(EXTERNAL_JSON) -I${EXTERNAL_LIBYAML}include -I${EXTERNAL_CURL}include -I${EXTERNAL_MSGPACK}include -I${EXTERNAL_BZIP2} -I${SHARED_MODULES}common -I${DBSYNC}include -I${RSYNC}include -I${SYSCOLLECTOR}include  -I${SYSINFO}include  -I${EXTERNAL_LIBPCRE2}include -I${EXTERNAL_RPM}/builddir/output/include -I${SYSCHECK}include -I${ROUTER}include -I${CONTENT_MANAGER}include -I${VULNERABILITY_SCANNER}include -I${INVENTORY_HARVESTER}include -I./shared_modules/
+OSSEC_CFLAGS+=-I$(abspath $(FAST_FLOAT_INSTALL_DIR))/include
+OSSEC_CFLAGS+=-I$(abspath $(RAPIDJSON_INSTALL_DIR))/include
+# For compiled libraries, include paths are usually handled by CMakeLists.txt,
+# but adding them here doesn't hurt for direct Makefile inspection or use.
+OSSEC_CFLAGS+=-I$(abspath $(PUGIXML_INSTALL_DIR))/include
+OSSEC_CFLAGS+=-I$(abspath $(YAMLCPP_INSTALL_DIR))/include
+OSSEC_CFLAGS+=-I$(abspath $(RE2_INSTALL_DIR))/include
+OSSEC_CFLAGS+=-I$(abspath $(LIBMAXMINDDB_INSTALL_DIR))/include
+OSSEC_CFLAGS+=-I$(abspath $(CONCURRENTQUEUE_INSTALL_DIR))/include
+OSSEC_CFLAGS+=-I$(abspath $(RXCPP_INSTALL_DIR))/include
 
 OSSEC_CFLAGS += ${CFLAGS}
 OSSEC_LDFLAGS += ${LDFLAGS}
@@ -951,7 +1056,7 @@ LZMA_LIB = $(EXTERNAL_LZMA)build/liblzma.a
 LUA_LIB = ${EXTERNAL_LUA}install/lib/liblua.a
 LIBBPF_LIB = $(EXTERNAL_LIBBPF)build/modern.bpf.o
 
-EXTERNAL_LIBS := $(JSON_LIB) $(ZLIB_LIB) $(OPENSSL_LIB) $(CRYPTO_LIB) $(SQLITE_LIB) $(LIBYAML_LIB) $(LIBPCRE2_LIB)
+EXTERNAL_LIBS := $(JSON_LIB) $(ZLIB_LIB) $(OPENSSL_LIB) $(CRYPTO_LIB) $(SQLITE_LIB) $(LIBYAML_LIB) $(LIBPCRE2_LIB) $(FMT_LIB_FILE) $(SPDLOG_LIB_FILE) $(DATE_LIB_FILE) $(DATE_TZ_LIB_FILE) $(PUGIXML_LIB_FILE) $(YAMLCPP_LIB_FILE) $(RE2_LIB_FILE) $(LIBMAXMINDDB_LIB_FILE)
 
 # Adding libcurl only on Windows, Linux and MacOS
 ifeq (${TARGET},winagent)
@@ -994,7 +1099,7 @@ endif
 
 
 .PHONY: external test_external
-external: test_external $(EXTERNAL_LIBS) $(JEMALLOC_LIB)
+external: test_external $(EXTERNAL_LIBS) $(JEMALLOC_LIB) $(FAST_FLOAT_INCLUDE_MARKER) $(RAPIDJSON_INCLUDE_MARKER) $(CONCURRENTQUEUE_INCLUDE_MARKER) $(RXCPP_INCLUDE_MARKER)
 
 ifneq (,$(filter ${TEST},YES yes y Y 1))
 external: build_gtest build_benchmark
@@ -1374,6 +1479,198 @@ else
 	cd ${EXTERNAL_JEMALLOC} && LDFLAGS=-s ./autogen.sh --disable-static --disable-cxx && ${MAKE}
 endif
 endif
+
+# fmt
+$(FMT_LIB_FILE): $(EXTERNAL_FMT)$(FMT_TARBALL) $(EXTERNAL_FMT)fix-pass-utf-8-only-if-the-compiler-is-MSVC-at-build.patch
+	@echo "Building fmt library..."
+	rm -rf $(FMT_SOURCE_EXTRACT_PATH) $(FMT_BUILD_DIR) $(FMT_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_FMT) && mkdir -p $(FMT_INSTALL_DIR)
+	tar -xzf $(EXTERNAL_FMT)$(FMT_TARBALL) -C $(EXTERNAL_FMT)
+	cd $(FMT_SOURCE_EXTRACT_PATH) && patch -p1 < ../fix-pass-utf-8-only-if-the-compiler-is-MSVC-at-build.patch
+	mkdir -p $(FMT_BUILD_DIR)
+	cd $(FMT_BUILD_DIR) && cmake $(abspath $(FMT_SOURCE_EXTRACT_PATH)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DFMT_TEST=OFF \
+		-DFMT_DOC=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(FMT_INSTALL_DIR))
+	cd $(FMT_BUILD_DIR) && $(MAKE)
+	cd $(FMT_BUILD_DIR) && $(MAKE) install
+
+# spdlog (depends on fmt)
+$(SPDLOG_LIB_FILE): $(EXTERNAL_SPDLOG)$(SPDLOG_TARBALL) $(FMT_LIB_FILE)
+	@echo "Building spdlog library..."
+	rm -rf $(SPDLOG_SOURCE_EXTRACT_PATH) $(SPDLOG_BUILD_DIR) $(SPDLOG_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_SPDLOG) && mkdir -p $(SPDLOG_INSTALL_DIR)
+	tar -xzf $(EXTERNAL_SPDLOG)$(SPDLOG_TARBALL) -C $(EXTERNAL_SPDLOG)
+	mkdir -p $(SPDLOG_BUILD_DIR)
+	cd $(SPDLOG_BUILD_DIR) && cmake $(abspath $(SPDLOG_SOURCE_EXTRACT_PATH)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DSPDLOG_BUILD_BENCH=OFF \
+		-DSPDLOG_WCHAR_SUPPORT=OFF \
+		-DSPDLOG_WCHAR_FILENAMES=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DSPDLOG_FMT_EXTERNAL=ON \
+		-DSPDLOG_INSTALL=ON \
+		-DSPDLOG_BUILD_EXAMPLE=OFF \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(SPDLOG_INSTALL_DIR)) \
+		-DCMAKE_PREFIX_PATH=$(abspath $(FMT_INSTALL_DIR))
+	cd $(SPDLOG_BUILD_DIR) && $(MAKE)
+	cd $(SPDLOG_BUILD_DIR) && $(MAKE) install
+
+# date
+$(DATE_LIB_FILE): $(EXTERNAL_DATE)$(DATE_TARBALL)
+	@echo "Building date library..."
+	rm -rf $(DATE_SOURCE_DIR) $(DATE_BUILD_DIR) $(DATE_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_DATE)tmp_date_src && mkdir -p $(DATE_INSTALL_DIR)
+	tar -xzf $(EXTERNAL_DATE)$(DATE_TARBALL) -C $(EXTERNAL_DATE)tmp_date_src --strip-components=1
+	# Handle cases where the top-level directory in the tarball might not be what we expect,
+	# or if there are multiple top-level items. Best to mv the specific source directory.
+	# Assuming the actual date library source is in a subdir like 'date-1ead6715dec030d340a341c927c877a3c4e5a00c'
+	# For now, the subtask should ensure the content of tmp_date_src is moved to DATE_SOURCE_DIR
+	mv $(EXTERNAL_DATE)tmp_date_src/* $(DATE_SOURCE_DIR) 2>/dev/null || mv $(EXTERNAL_DATE)tmp_date_src $(DATE_SOURCE_DIR)
+	rm -rf $(EXTERNAL_DATE)tmp_date_src
+	mkdir -p $(DATE_BUILD_DIR)
+	cd $(DATE_BUILD_DIR) && cmake $(abspath $(DATE_SOURCE_DIR)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DUSE_SYSTEM_TZ_DB=ON \
+		-DBUILD_TZ_LIB=ON \
+		-DENABLE_DATE_TESTING=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(DATE_INSTALL_DIR))
+	cd $(DATE_BUILD_DIR) && $(MAKE)
+	cd $(DATE_BUILD_DIR) && $(MAKE) install
+	@echo "Checking for date library artifacts..."
+	@if [ ! -f $(abspath $(DATE_LIB_FILE)) ]; then echo "Error: $(DATE_LIB_FILE) not found"; exit 1; fi
+	@if [ ! -f $(abspath $(DATE_TZ_LIB_FILE)) ]; then echo "Warning: $(DATE_TZ_LIB_FILE) not found, this might be an issue."; fi
+
+# fast-float (header-only, installed via CMake)
+$(FAST_FLOAT_INCLUDE_MARKER): $(EXTERNAL_FAST_FLOAT)$(FAST_FLOAT_TARBALL)
+	@echo "Installing fast_float headers..."
+	rm -rf $(FAST_FLOAT_SOURCE_TMP_EXTRACT_DIR) $(FAST_FLOAT_BUILD_DIR) $(FAST_FLOAT_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_FAST_FLOAT) && mkdir -p $(FAST_FLOAT_INSTALL_DIR)/include
+	mkdir -p $(FAST_FLOAT_SOURCE_TMP_EXTRACT_DIR)
+	tar -xzf $(EXTERNAL_FAST_FLOAT)$(FAST_FLOAT_TARBALL) -C $(FAST_FLOAT_SOURCE_TMP_EXTRACT_DIR) --strip-components=1
+	mkdir -p $(FAST_FLOAT_BUILD_DIR)
+	cd $(FAST_FLOAT_BUILD_DIR) && cmake $(abspath $(FAST_FLOAT_SOURCE_TMP_EXTRACT_DIR)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DFASTFLOAT_INSTALL=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(FAST_FLOAT_INSTALL_DIR))
+	cd $(FAST_FLOAT_BUILD_DIR) && $(MAKE) install
+	rm -rf $(FAST_FLOAT_SOURCE_TMP_EXTRACT_DIR)
+	@if [ ! -f $(abspath $(FAST_FLOAT_INCLUDE_MARKER)) ]; then echo "Error: $(FAST_FLOAT_INCLUDE_MARKER) not found"; exit 1; fi
+
+# rapidjson (header-only, installed via CMake)
+$(RAPIDJSON_INCLUDE_MARKER): $(EXTERNAL_RAPIDJSON)$(RAPIDJSON_TARBALL)
+	@echo "Installing rapidjson headers..."
+	rm -rf $(RAPIDJSON_SOURCE_DIR) $(RAPIDJSON_BUILD_DIR) $(RAPIDJSON_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_RAPIDJSON)tmp_rapidjson_src && mkdir -p $(RAPIDJSON_INSTALL_DIR)/include
+	tar -xzf $(EXTERNAL_RAPIDJSON)$(RAPIDJSON_TARBALL) -C $(EXTERNAL_RAPIDJSON)tmp_rapidjson_src --strip-components=1
+	mv $(EXTERNAL_RAPIDJSON)tmp_rapidjson_src $(RAPIDJSON_SOURCE_DIR)
+	mkdir -p $(RAPIDJSON_BUILD_DIR)
+	cd $(RAPIDJSON_BUILD_DIR) && cmake $(abspath $(RAPIDJSON_SOURCE_DIR)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DRAPIDJSON_BUILD_DOC=OFF \
+		-DRAPIDJSON_BUILD_EXAMPLES=OFF \
+		-DRAPIDJSON_BUILD_TESTS=OFF \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(RAPIDJSON_INSTALL_DIR))
+	cd $(RAPIDJSON_BUILD_DIR) && $(MAKE) install
+	@if [ ! -f $(abspath $(RAPIDJSON_INCLUDE_MARKER)) ]; then echo "Error: $(RAPIDJSON_INCLUDE_MARKER) not found"; exit 1; fi
+
+# pugixml
+$(PUGIXML_LIB_FILE): $(EXTERNAL_PUGIXML)$(PUGIXML_TARBALL_ACTUAL)
+	@echo "Building pugixml library..."
+	rm -rf $(PUGIXML_SOURCE_EXTRACT_PATH) $(PUGIXML_BUILD_DIR) $(PUGIXML_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_PUGIXML) && mkdir -p $(PUGIXML_INSTALL_DIR)
+	tar -xzf $(EXTERNAL_PUGIXML)$(PUGIXML_TARBALL_ACTUAL) -C $(EXTERNAL_PUGIXML)
+	mkdir -p $(PUGIXML_BUILD_DIR)
+	cd $(PUGIXML_BUILD_DIR) && cmake $(abspath $(PUGIXML_SOURCE_EXTRACT_PATH)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DPUGIXML_BUILD_TESTS=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(PUGIXML_INSTALL_DIR))
+	cd $(PUGIXML_BUILD_DIR) && $(MAKE)
+	cd $(PUGIXML_BUILD_DIR) && $(MAKE) install
+
+# yaml-cpp
+$(YAMLCPP_LIB_FILE): $(EXTERNAL_YAMLCPP)$(YAMLCPP_TARBALL)
+	@echo "Building yaml-cpp library..."
+	rm -rf $(YAMLCPP_SOURCE_EXTRACT_PATH) $(YAMLCPP_BUILD_DIR) $(YAMLCPP_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_YAMLCPP) && mkdir -p $(YAMLCPP_INSTALL_DIR)
+	tar -xzf $(EXTERNAL_YAMLCPP)$(YAMLCPP_TARBALL) -C $(EXTERNAL_YAMLCPP)
+	mkdir -p $(YAMLCPP_BUILD_DIR)
+	cd $(YAMLCPP_BUILD_DIR) && cmake $(abspath $(YAMLCPP_SOURCE_EXTRACT_PATH)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DYAML_CPP_BUILD_TOOLS=OFF \
+		-DYAML_CPP_BUILD_TESTS=OFF \
+		-DYAML_BUILD_SHARED_LIBS=OFF \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(YAMLCPP_INSTALL_DIR))
+	cd $(YAMLCPP_BUILD_DIR) && $(MAKE)
+	cd $(YAMLCPP_BUILD_DIR) && $(MAKE) install
+
+# re2
+$(RE2_LIB_FILE): $(EXTERNAL_RE2)$(RE2_TARBALL)
+	@echo "Building re2 library..."
+	rm -rf $(RE2_SOURCE_EXTRACT_PATH) $(RE2_BUILD_DIR) $(RE2_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_RE2) && mkdir -p $(RE2_INSTALL_DIR)
+	tar -xzf $(EXTERNAL_RE2)$(RE2_TARBALL) -C $(EXTERNAL_RE2)
+	mkdir -p $(RE2_BUILD_DIR)
+	cd $(RE2_BUILD_DIR) && cmake $(abspath $(RE2_SOURCE_EXTRACT_PATH)) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DRE2_BUILD_TESTING=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_CXX_STANDARD=17 \
+		-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(RE2_INSTALL_DIR))
+	cd $(RE2_BUILD_DIR) && $(MAKE)
+	cd $(RE2_BUILD_DIR) && $(MAKE) install
+
+# libmaxminddb (autotools)
+$(LIBMAXMINDDB_LIB_FILE): $(EXTERNAL_LIBMAXMINDDB)$(LIBMAXMINDDB_TARBALL)
+	@echo "Building libmaxminddb library..."
+	rm -rf $(LIBMAXMINDDB_SOURCE_EXTRACT_PATH) $(LIBMAXMINDDB_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_LIBMAXMINDDB) && mkdir -p $(LIBMAXMINDDB_INSTALL_DIR)
+	tar -xzf $(EXTERNAL_LIBMAXMINDDB)$(LIBMAXMINDDB_TARBALL) -C $(EXTERNAL_LIBMAXMINDDB)
+	cd $(LIBMAXMINDDB_SOURCE_EXTRACT_PATH) &&autoreconf -fi # Ensure configure script is present and up-to-date
+	cd $(LIBMAXMINDDB_SOURCE_EXTRACT_PATH) && ./configure \
+		--prefix=$(abspath $(LIBMAXMINDDB_INSTALL_DIR)) \
+		--disable-tests \
+		--enable-static \
+		--disable-shared \
+		CFLAGS="-fPIC $(OFLAGS)" CXXFLAGS="-fPIC $(OFLAGS)"
+	cd $(LIBMAXMINDDB_SOURCE_EXTRACT_PATH) && $(MAKE)
+	cd $(LIBMAXMINDDB_SOURCE_EXTRACT_PATH) && $(MAKE) install
+
+# concurrentqueue (header-only, direct copy)
+$(CONCURRENTQUEUE_INCLUDE_MARKER): $(EXTERNAL_CONCURRENTQUEUE)$(CONCURRENTQUEUE_TARBALL)
+	@echo "Installing concurrentqueue headers..."
+	rm -rf $(CONCURRENTQUEUE_SOURCE_TMP_EXTRACT_DIR) $(CONCURRENTQUEUE_INSTALL_DIR)
+	mkdir -p $(CONCURRENTQUEUE_INSTALL_DIR)/include
+	mkdir -p $(CONCURRENTQUEUE_SOURCE_TMP_EXTRACT_DIR)
+	tar -xzf $(EXTERNAL_CONCURRENTQUEUE)$(CONCURRENTQUEUE_TARBALL) -C $(CONCURRENTQUEUE_SOURCE_TMP_EXTRACT_DIR) --strip-components=1
+	cp $(CONCURRENTQUEUE_SOURCE_TMP_EXTRACT_DIR)/*.h $(CONCURRENTQUEUE_INSTALL_DIR)/include/
+	rm -rf $(CONCURRENTQUEUE_SOURCE_TMP_EXTRACT_DIR)
+	@if [ ! -f $(abspath $(CONCURRENTQUEUE_INCLUDE_MARKER)) ]; then echo "Error: $(CONCURRENTQUEUE_INCLUDE_MARKER) not found"; exit 1; fi
+
+# rxcpp (header-only, CMake install, patched)
+$(RXCPP_INCLUDE_MARKER): $(EXTERNAL_RXCPP)$(RXCPP_TARBALL) $(EXTERNAL_RXCPP)$(RXCPP_DISABLE_TESTS_PATCH_FILE)
+	@echo "Installing rxcpp headers..."
+	rm -rf $(RXCPP_SOURCE_EXTRACT_PATH) $(RXCPP_BUILD_DIR) $(RXCPP_INSTALL_DIR)
+	mkdir -p $(EXTERNAL_RXCPP) && mkdir -p $(RXCPP_INSTALL_DIR)/include
+	tar -xzf $(EXTERNAL_RXCPP)$(RXCPP_TARBALL) -C $(EXTERNAL_RXCPP)
+	cd $(RXCPP_SOURCE_EXTRACT_PATH) && patch -p1 < ../$(RXCPP_DISABLE_TESTS_PATCH_FILE)
+	mkdir -p $(RXCPP_BUILD_DIR)
+	cd $(RXCPP_BUILD_DIR) && cmake $(abspath $(RXCPP_SOURCE_EXTRACT_PATH))/projects/CMake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DRXCPP_DISABLE_TESTS_AND_EXAMPLES=ON \
+		-DCMAKE_INSTALL_PREFIX=$(abspath $(RXCPP_INSTALL_DIR))
+	cd $(RXCPP_BUILD_DIR) && $(MAKE) install
+	@if [ ! -f $(abspath $(RXCPP_INCLUDE_MARKER)) ]; then echo "Error: $(RXCPP_INCLUDE_MARKER) not found"; exit 1; fi
 
 ################################
 #### External dependencies  ####
