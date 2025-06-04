@@ -75,6 +75,17 @@ EXTERNAL_FLATBUFFERS=external/flatbuffers/
 EXTERNAL_LZMA=external/lzma/
 EXTERNAL_LUA=external/lua/
 EXTERNAL_LIBPCRE2=external/libpcre2/
+EXTERNAL_CONCURRENTQUEUE=external/concurrentqueue-1_0_4/
+EXTERNAL_DATE=external/date-6_1_4/
+EXTERNAL_FMT=external/fmt-8_1_1/
+EXTERNAL_LIBMAXMINDDB=external/libmaxminddb-1_9_1/
+EXTERNAL_OPENTELEMETRY_CPP=external/opentelemetry-cpp-1_8_3/
+EXTERNAL_PROTOBUF=external/protobuf-21_12/
+EXTERNAL_PUGIXML=external/pugixml-1_15/
+EXTERNAL_RAPIDJSON=external/rapidjson-a95e013b/
+EXTERNAL_RE2=external/re2-2024_06_01/
+EXTERNAL_RXCPP=external/rxcpp-4_1_1/
+EXTERNAL_SPDLOG=external/spdlog-1_14_1/
 ifneq (${TARGET},winagent)
 EXTERNAL_PROCPS=external/procps/
 EXTERNAL_LIBDB=external/libdb/build_unix/
@@ -436,6 +447,7 @@ endif
 OSSEC_CFLAGS+=${DEFINES}
 OSSEC_CFLAGS+=-pipe -Wall -Wextra -std=gnu99
 OSSEC_CFLAGS+=-I./ -I./headers/ -I${EXTERNAL_OPENSSL}include -I$(EXTERNAL_JSON) -I${EXTERNAL_LIBYAML}include -I${EXTERNAL_CURL}include -I${EXTERNAL_MSGPACK}include -I${EXTERNAL_BZIP2} -I${SHARED_MODULES}common -I${DBSYNC}include -I${RSYNC}include -I${SYSCOLLECTOR}include  -I${SYSINFO}include  -I${EXTERNAL_LIBPCRE2}include -I${EXTERNAL_RPM}/builddir/output/include -I${SYSCHECK}include -I${ROUTER}include -I${CONTENT_MANAGER}include -I${VULNERABILITY_SCANNER}include -I${INVENTORY_HARVESTER}include -I./shared_modules/
+OSSEC_CFLAGS+=-I$(EXTERNAL_CONCURRENTQUEUE) -I$(EXTERNAL_DATE)include -I$(EXTERNAL_FMT)include -I$(EXTERNAL_LIBMAXMINDDB)include -I$(EXTERNAL_OPENTELEMETRY_CPP)api/include -I$(EXTERNAL_OPENTELEMETRY_CPP)sdk/include -I$(EXTERNAL_PROTOBUF)src -I$(EXTERNAL_PUGIXML)src -I$(EXTERNAL_RAPIDJSON)include -I$(EXTERNAL_RE2) -I$(EXTERNAL_RXCPP)Rx/v2/src/ -I$(EXTERNAL_SPDLOG)include
 
 OSSEC_CFLAGS += ${CFLAGS}
 OSSEC_LDFLAGS += ${LDFLAGS}
@@ -950,8 +962,12 @@ FLATBUFFERS_LIB = $(EXTERNAL_FLATBUFFERS)build/libflatbuffers.a
 LZMA_LIB = $(EXTERNAL_LZMA)build/liblzma.a
 LUA_LIB = ${EXTERNAL_LUA}install/lib/liblua.a
 LIBBPF_LIB = $(EXTERNAL_LIBBPF)build/modern.bpf.o
+PUGIXML_LIB = $(EXTERNAL_PUGIXML)build/libpugixml.a
+LIBMAXMINDDB_LIB = $(EXTERNAL_LIBMAXMINDDB)src/.libs/libmaxminddb.a
+RE2_LIB = $(EXTERNAL_RE2)build/libre2.a
+DATE_LIB = $(EXTERNAL_DATE)build/libdate-tz.a
 
-EXTERNAL_LIBS := $(JSON_LIB) $(ZLIB_LIB) $(OPENSSL_LIB) $(CRYPTO_LIB) $(SQLITE_LIB) $(LIBYAML_LIB) $(LIBPCRE2_LIB)
+EXTERNAL_LIBS := $(JSON_LIB) $(ZLIB_LIB) $(OPENSSL_LIB) $(CRYPTO_LIB) $(SQLITE_LIB) $(LIBYAML_LIB) $(LIBPCRE2_LIB) $(PUGIXML_LIB) $(LIBMAXMINDDB_LIB) $(RE2_LIB) $(DATE_LIB)
 
 # Adding libcurl only on Windows, Linux and MacOS
 ifeq (${TARGET},winagent)
@@ -994,7 +1010,7 @@ endif
 
 
 .PHONY: external test_external
-external: test_external $(EXTERNAL_LIBS) $(JEMALLOC_LIB)
+external: test_external $(EXTERNAL_LIBS) $(JEMALLOC_LIB) $(PUGIXML_LIB) $(LIBMAXMINDDB_LIB) $(RE2_LIB) $(DATE_LIB)
 
 ifneq (,$(filter ${TEST},YES yes y Y 1))
 external: build_gtest build_benchmark
@@ -1073,6 +1089,26 @@ endif
 
 $(LIBBPF_LIB):
 	cd $(EXTERNAL_LIBBPF) && mkdir -p build && cd build && cmake .. && ${MAKE}
+
+#### pugixml ##########
+
+$(PUGIXML_LIB): $(EXTERNAL_PUGIXML)CMakeLists.txt
+	cd $(EXTERNAL_PUGIXML) && mkdir -p build && cd build && cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=OFF .. && $(MAKE)
+
+#### libmaxminddb #######
+
+$(LIBMAXMINDDB_LIB): $(EXTERNAL_LIBMAXMINDDB)configure
+	cd $(EXTERNAL_LIBMAXMINDDB) && CFLAGS="-fPIC" ./configure --enable-static --disable-shared && $(MAKE)
+
+#### RE2 ################
+
+$(RE2_LIB): $(EXTERNAL_RE2)CMakeLists.txt
+	cd $(EXTERNAL_RE2) && mkdir -p build && cd build && cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DRE2_BUILD_TESTING=OFF -DBUILD_SHARED_LIBS=OFF .. && $(MAKE)
+
+#### Date ###############
+
+$(DATE_LIB): $(EXTERNAL_DATE)CMakeLists.txt
+	cd $(EXTERNAL_DATE) && mkdir -p build && cd build && cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DUSE_SYSTEM_TZ_DB=ON -DBUILD_SHARED_LIBS=OFF .. && $(MAKE)
 
 ### rocks db ###
 
@@ -1464,7 +1500,7 @@ PRECOMPILED_RES := $(PRECOMPILED_OS)$(PRECOMPILED_ARCH)
 endif
 
 # Agent dependencies
-EXTERNAL_RES := cJSON curl libdb libffi libyaml openssl procps sqlite zlib audit-userspace msgpack bzip2 nlohmann googletest libpcre2 libplist pacman libarchive popt lua rpm rocksdb lzma cpp-httplib benchmark libbpf-bootstrap
+EXTERNAL_RES := cJSON curl libdb libffi libyaml openssl procps sqlite zlib audit-userspace msgpack bzip2 nlohmann googletest libpcre2 libplist pacman libarchive popt lua rpm rocksdb lzma cpp-httplib benchmark libbpf-bootstrap concurrentqueue-1_0_4 date-6_1_4 fmt-8_1_1 libmaxminddb-1_9_1 opentelemetry-cpp-1_8_3 protobuf-21_12 pugixml-1_15 rapidjson-a95e013b re2-2024_06_01 rxcpp-4_1_1 spdlog-1_14_1
 ifneq (${TARGET},agent)
 ifneq (${TARGET},winagent)
 	# Manager extra dependency

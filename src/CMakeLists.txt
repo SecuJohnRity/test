@@ -54,6 +54,17 @@ set(EXTERNAL_RES
     googletest
     benchmark
     cpp-httplib
+    concurrentqueue-1_0_4
+    date-6_1_4
+    fmt-8_1_1
+    libmaxminddb-1_9_1
+    opentelemetry-cpp-1_8_3
+    protobuf-21_12
+    pugixml-1_15
+    rapidjson-a95e013b
+    re2-2024_06_01
+    rxcpp-4_1_1
+    spdlog-1_14_1
     )
 
 if(NOT EXTERNAL_DEPS_VERSION)
@@ -130,6 +141,17 @@ include_directories(${SRC_FOLDER}/external/lzma/src/liblzma/api)
 include_directories(${SRC_FOLDER}/external/zlib/)
 include_directories(${SRC_FOLDER}/external/zlib/contrib/)
 include_directories(${SRC_FOLDER}/external/libarchive/libarchive/)
+include_directories(${SRC_FOLDER}/external/concurrentqueue-1_0_4)
+include_directories(${SRC_FOLDER}/external/date-6_1_4/include)
+include_directories(${SRC_FOLDER}/external/fmt-8_1_1/include)
+include_directories(${SRC_FOLDER}/external/libmaxminddb-1_9_1/include)
+include_directories(${SRC_FOLDER}/external/opentelemetry-cpp-1_8_3/include)
+include_directories(${SRC_FOLDER}/external/protobuf-21_12/src)
+include_directories(${SRC_FOLDER}/external/pugixml-1_15/src)
+include_directories(${SRC_FOLDER}/external/rapidjson-a95e013b/include)
+include_directories(${SRC_FOLDER}/external/re2-2024_06_01)
+include_directories(${SRC_FOLDER}/external/rxcpp-4_1_1/Rx/v2/src)
+include_directories(${SRC_FOLDER}/external/spdlog-1_14_1/include)
 
 add_subdirectory(shared_modules/utils)
 add_subdirectory(shared_modules/router)
@@ -141,3 +163,4 @@ add_subdirectory(shared_modules/indexer_connector)
 add_subdirectory(wazuh_modules/vulnerability_scanner)
 add_subdirectory(shared_modules/keystore)
 add_subdirectory(wazuh_modules/inventory_harvester)
+add_subdirectory(engine)

@@ -53,12 +53,12 @@ MACRO_ENSURE_OUT_OF_SOURCE_BUILD(
     "${CMAKE_PROJECT_NAME} requires an out of source build."
 )
 
-if(DEFINED VCPKG_TARGET_TRIPLET)
-    message(STATUS "Using VCPKG triplet: ${VCPKG_TARGET_TRIPLET}")
-else()
-    message(WARNING "VCPKG_TARGET_TRIPLET is not defined. Make sure you are using the vcpkg toolchain.")
-    FATAL_ERROR("VCPKG_TARGET_TRIPLET is not defined.")
-endif()
+# if(DEFINED VCPKG_TARGET_TRIPLET)
+#     message(STATUS "Using VCPKG triplet: ${VCPKG_TARGET_TRIPLET}")
+# else()
+#     message(WARNING "VCPKG_TARGET_TRIPLET is not defined. Make sure you are using the vcpkg toolchain.")
+#     FATAL_ERROR("VCPKG_TARGET_TRIPLET is not defined.")
+# endif()
 
 ####################################################################################################
 # Temporary IANA Time Zone Database fixed
@@ -126,75 +126,75 @@ configure_tzdb()
 ####################################################################################################
 # Dependencies
 ####################################################################################################
-function(action package_name target_name)
-    if (${package_name}_FOUND)
-        if (NOT TARGET ${target_name})
-            add_library(${target_name} INTERFACE IMPORTED)
-            set_target_properties(${target_name} PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES "${${package_name}_INCLUDE_DIRS}")
-            message(STATUS "Created imported target ${target_name}")
-        else()
-            message(STATUS "Target ${target_name} already exists")
-        endif()
-    else()
-        message(FATAL_ERROR "${package_name} not found!")
-    endif()
-endfunction()
+# function(action package_name target_name)
+#     if (${package_name}_FOUND)
+#         if (NOT TARGET ${target_name})
+#             add_library(${target_name} INTERFACE IMPORTED)
+#             set_target_properties(${target_name} PROPERTIES
+#                 INTERFACE_INCLUDE_DIRECTORIES "${${package_name}_INCLUDE_DIRS}")
+#             message(STATUS "Created imported target ${target_name}")
+#         else()
+#             message(STATUS "Target ${target_name} already exists")
+#         endif()
+#     else()
+#         message(FATAL_ERROR "${package_name} not found!")
+#     endif()
+# endfunction()
 
-function(find_and_create_imported_target package_name target_name)
-    find_package(${package_name} CONFIG REQUIRED)
-    action(${package_name} ${target_name})
-endfunction()
+# function(find_and_create_imported_target package_name target_name)
+#     find_package(${package_name} CONFIG REQUIRED)
+#     action(${package_name} ${target_name})
+# endfunction()
 
-function(find_and_create_imported_target_ex package_name target_name)
-    find_package(${package_name} REQUIRED)
-    action(${package_name} ${target_name})
-endfunction()
+# function(find_and_create_imported_target_ex package_name target_name)
+#     find_package(${package_name} REQUIRED)
+#     action(${package_name} ${target_name})
+# endfunction()
 
 # Build test
-if(ENGINE_BUILD_TEST)
-include(CTest)
-find_and_create_imported_target("GTest" "GTest::gtest")
-find_and_create_imported_target("GTest" "GTest::gtest_main")
-find_and_create_imported_target("GTest" "GTest::gmock")
-find_and_create_imported_target("GTest" "GTest::gmock_main")
-include(GoogleTest)
-endif(ENGINE_BUILD_TEST)
+# if(ENGINE_BUILD_TEST)
+# include(CTest)
+# find_and_create_imported_target("GTest" "GTest::gtest")
+# find_and_create_imported_target("GTest" "GTest::gtest_main")
+# find_and_create_imported_target("GTest" "GTest::gmock")
+# find_and_create_imported_target("GTest" "GTest::gmock_main")
+# include(GoogleTest)
+# endif(ENGINE_BUILD_TEST)
 
-find_and_create_imported_target("RapidJSON" "RapidJSON::RapidJSON")
-find_and_create_imported_target("rxcpp" "RxCpp::RxCpp")
-# yaml-cpp::yaml-cpp vs yaml-cpp #FIXME 70 stars on github
-find_and_create_imported_target("yaml-cpp" "yaml-cpp::yaml-cpp")
-find_and_create_imported_target("spdlog" "spdlog::spdlog")
-find_and_create_imported_target("FastFloat" "FastFloat::fast-float")
-find_and_create_imported_target("fmt" "fmt::fmt-header-only")
-find_and_create_imported_target("RocksDB" "RocksDB::rocksdb")
-find_and_create_imported_target("Taskflow" "Taskflow::Taskflow")
-find_and_create_imported_target("unofficial-concurrentqueue" "unofficial-concurrentqueue::concurrentqueue")
-find_and_create_imported_target("re2" "re2::re2")
-find_and_create_imported_target("CURL" "CURL::libcurl")
-find_and_create_imported_target("maxminddb" "maxminddb::maxminddb")
-find_and_create_imported_target("benchmark" "benchmark::benchmark")
-find_and_create_imported_target("pugixml" "pugixml::pugixml")
+# find_and_create_imported_target("RapidJSON" "RapidJSON::RapidJSON")
+# find_and_create_imported_target("rxcpp" "RxCpp::RxCpp")
+# # yaml-cpp::yaml-cpp vs yaml-cpp #FIXME 70 stars on github
+# find_and_create_imported_target("yaml-cpp" "yaml-cpp::yaml-cpp")
+# find_and_create_imported_target("spdlog" "spdlog::spdlog")
+# find_and_create_imported_target("FastFloat" "FastFloat::fast-float")
+# find_and_create_imported_target("fmt" "fmt::fmt-header-only")
+# find_and_create_imported_target("RocksDB" "RocksDB::rocksdb")
+# find_and_create_imported_target("Taskflow" "Taskflow::Taskflow")
+# find_and_create_imported_target("unofficial-concurrentqueue" "unofficial-concurrentqueue::concurrentqueue")
+# find_and_create_imported_target("re2" "re2::re2")
+# find_and_create_imported_target("CURL" "CURL::libcurl")
+# find_and_create_imported_target("maxminddb" "maxminddb::maxminddb")
+# find_and_create_imported_target("benchmark" "benchmark::benchmark")
+# find_and_create_imported_target("pugixml" "pugixml::pugixml")
 
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::api")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::sdk")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::logs")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::metrics")
-find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::resources")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::api")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::sdk")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::logs")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::metrics")
+# find_and_create_imported_target("opentelemetry-cpp" "opentelemetry-cpp::resources")
 
-find_and_create_imported_target("Protobuf" "protobuf::libprotobuf")
-find_and_create_imported_target("flatbuffers" "flatbuffers::flatbuffers")
-find_and_create_imported_target("httplib" "httplib::httplib")
+# find_and_create_imported_target("Protobuf" "protobuf::libprotobuf")
+# find_and_create_imported_target("flatbuffers" "flatbuffers::flatbuffers")
+# find_and_create_imported_target("httplib" "httplib::httplib")
 
-find_and_create_imported_target("date" "date::date")
-find_and_create_imported_target("date" "date::date-tz")
+# find_and_create_imported_target("date" "date::date")
+# find_and_create_imported_target("date" "date::date-tz")
 
-find_and_create_imported_target("liblzma" "liblzma::liblzma")
-find_and_create_imported_target_ex("LibArchive" "LibArchive::LibArchive")
+# find_and_create_imported_target("liblzma" "liblzma::liblzma")
+# find_and_create_imported_target_ex("LibArchive" "LibArchive::LibArchive")
 
-find_and_create_imported_target_ex("OpenSSL" "OpenSSL::SSL")
-find_and_create_imported_target_ex("OpenSSL" "OpenSSL::Crypto")
+# find_and_create_imported_target_ex("OpenSSL" "OpenSSL::SSL")
+# find_and_create_imported_target_ex("OpenSSL" "OpenSSL::Crypto")
 
 ####################################################################################################
 # Targets
@@ -234,28 +234,47 @@ add_subdirectory(${ENGINE_SOURCE_DIR}/archiver)
 target_link_libraries(main
     base
     conf
-    yml
+    yaml # yml
     defs
     builder
-    #bk::taskf
-    bk::rx
+    #bk::taskf # Taskflow - currently unhandled
+    # bk::rx # rxcpp - header only
     router::router
     store
     store::fileDriver
     api
     kvdb
     eMessages
-    metrics
-    geo
+    # metrics (opentelemetry-cpp)
+    opentelemetry_api
+    opentelemetry_sdk
+    opentelemetry_logs
+    opentelemetry_metrics
+    opentelemetry_resources
+    maxminddb # geo
     schemf
     rbac
     geo::igeo
     vdscanner
-    indexerconnector
+    httplib # indexerconnector
+    curl    # indexerconnector
     httpsrv
     api::event
-    queue
+    # queue # unofficial-concurrentqueue - header only
     archiver
+    # Other direct dependencies that might have been brought by vcpkg targets
+    # but now need to be explicit if not pulled by other Wazuh mechanisms.
+    # Add more here as needed, e.g. for RocksDB, re2, pugixml, protobuf, flatbuffers, date-tz, lzma, archive, ssl, crypto
+    rocksdb
+    re2
+    pugixml
+    protobuf
+    flatbuffers
+    date-tz
+    lzma
+    archive
+    ssl
+    crypto
 )
 
 # If ASAN, UBSAN or any other sanitizers are enabled do not link with static libraries
